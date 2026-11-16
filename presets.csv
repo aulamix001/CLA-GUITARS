@@ -1,0 +1,61 @@
+Category,Name,Amp,ReAmplify,Input,Output,Bass,Treble,Compress,Reverb,Delay,Pitch,BassColor,TrebleColor,CompressColor,ReverbColor,DelayColor,PitchColor,BassOn,TrebleOn,CompressOn,ReverbOn,DelayOn,PitchOn
+Acoustic,Steel Sparkle,Clean,Off,0.00,0.00,-2.00,4.00,1.00,0.00,-10.00,-7.00,Lower,Roof,Spank,Hall,Quarter,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Acoustic,Nylon Warmth,Clean,Off,0.00,0.00,2.00,1.00,-2.00,-2.00,-10.00,-10.00,Lower,Roof,Push,Hall,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Acoustic,Acoustic Wide,Clean,Off,0.00,0.00,-1.00,3.00,2.00,1.00,-8.00,1.00,Upper,Roof,Spank,Hall,Edge,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+Clean,Clean Chorus,Clean,On,0.00,0.00,0.00,2.00,1.00,-2.00,-7.00,2.00,Lower,Top,Spank,Club,Edge,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+Clean,Clean Bright,Clean,On,0.00,0.00,-2.00,5.00,0.00,-3.00,-10.00,-8.00,Upper,Roof,Spank,Hall,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Clean,Funk Rhythm,Clean,On,0.00,0.00,-3.00,3.00,5.00,-7.00,-10.00,-10.00,Upper,Bite,Spank,Club,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Crunch,Crunch Rhythm,Crunch,On,0.00,0.00,2.00,1.00,1.00,-4.00,-10.00,-9.00,Lower,Top,Spank,Club,Edge,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Crunch,Rock Grit,Crunch,On,0.00,0.00,3.00,3.00,3.00,-5.00,-8.00,-8.00,Upper,Bite,Push,Club,Edge,Wide,1.00,1.00,1.00,1.00,1.00,1.00
+Crunch,Indie Edge,Crunch,On,0.00,0.00,-1.00,4.00,0.00,1.00,-2.00,-3.00,Lower,Top,Spank,Hall,Edge,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+Heavy,Heavy Wall,Heavy,On,0.00,0.00,4.00,1.00,4.00,-5.00,-9.00,-5.00,Lower,Top,Wall,Club,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Heavy,Metal Rhythm,Heavy,On,0.00,0.00,2.00,3.00,2.00,-8.00,-10.00,-10.00,Sub,Bite,Push,Club,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Heavy,Thick Heavy,Heavy,On,0.00,0.00,5.00,-1.00,5.00,-4.00,-8.00,-3.00,Lower,Roof,Wall,Club,Eight,Wide,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Lead Solo,Heavy,On,0.00,0.00,1.00,3.00,6.00,1.00,3.00,-3.00,Lower,Top,Push,Hall,Quarter,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Big Lead,Heavy,On,0.00,0.00,3.00,2.00,7.00,4.00,4.00,0.00,Upper,Roof,Wall,Arena,Quarter,Wide,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Screaming Lead,Heavy,On,0.00,0.00,0.00,5.00,8.00,2.00,3.00,-2.00,Lower,Bite,Push,Hall,Edge,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+FX / Special,Ambient Glass,Clean,On,0.00,0.00,-2.00,4.00,3.00,8.00,6.00,6.00,Upper,Roof,Spank,Arena,Quarter,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+FX / Special,Wide Echo,Crunch,On,0.00,0.00,0.00,1.00,2.00,5.00,8.00,7.00,Lower,Top,Spank,Hall,Quarter,Wide,1.00,1.00,1.00,1.00,1.00,1.00
+FX / Special,Slap Texture,Clean,On,0.00,0.00,-1.00,2.00,1.00,2.00,7.00,4.00,Upper,Bite,Push,Club,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Acoustic,Steel Studio,Clean,Off,0.00,-1.00,-2.00,3.00,2.00,-6.00,-10.00,-10.00,Lower,Roof,Spank,Club,Quarter,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Acoustic,Nylon Intimate,Bypass,Off,1.00,-1.00,2.00,1.00,-1.00,-5.00,-10.00,-10.00,Lower,Top,Wall,Club,Eight,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Acoustic,Fingerstyle Air,Clean,Off,0.00,-2.00,-1.00,5.00,3.00,-1.00,-8.00,-6.00,Upper,Roof,Spank,Hall,Edge,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Acoustic,Strum Radio,Clean,Off,-1.00,-2.00,-3.00,4.00,5.00,-3.00,-10.00,-10.00,Upper,Bite,Push,Club,Quarter,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Acoustic,Acoustic Cathedral,Clean,Off,0.00,-3.00,1.00,3.00,2.00,7.00,1.00,0.00,Sub,Roof,Spank,Arena,Quarter,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+Acoustic,Acoustic Double,Clean,Off,0.00,-2.00,0.00,2.00,1.00,-4.00,-10.00,4.00,Lower,Top,Spank,Club,Eight,Wide,1.00,1.00,1.00,1.00,0.00,1.00
+Acoustic,Acoustic Dry DI,Bypass,Off,0.00,0.00,0.00,0.00,0.00,-10.00,-10.00,-10.00,Upper,Roof,Wall,Club,Eight,Stereo,0.00,0.00,0.00,0.00,0.00,0.00
+Clean,Pop Arpeggio,Clean,On,0.00,-2.00,-1.00,4.00,3.00,0.00,-2.00,-2.00,Upper,Roof,Spank,Hall,Edge,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Clean,Disco Chops,Clean,On,-1.00,-2.00,-4.00,5.00,6.00,-6.00,-10.00,-10.00,Upper,Bite,Push,Club,Eight,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Clean,Jazz Velvet,Clean,On,0.00,-1.00,3.00,-4.00,2.00,-4.00,-10.00,-10.00,Lower,Roof,Wall,Club,Eight,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Clean,Country Snap,Clean,On,0.00,-2.00,-2.00,4.00,5.00,-5.00,0.00,-10.00,Upper,Bite,Spank,Club,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,0.00
+Clean,Dream Chorus,Clean,On,0.00,-3.00,0.00,3.00,2.00,3.00,-1.00,5.00,Lower,Top,Wall,Hall,Edge,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+Clean,Studio DI Polish,Bypass,Off,1.00,-2.00,-1.00,2.00,4.00,-10.00,-10.00,-10.00,Upper,Roof,Spank,Club,Quarter,Stereo,1.00,1.00,1.00,0.00,0.00,0.00
+Clean,Clean Stereo Rhythm,Clean,On,0.00,-2.00,1.00,2.00,3.00,-3.00,-7.00,3.00,Lower,Top,Push,Club,Edge,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Crunch,Blues Breakup,Crunch,On,-2.00,-1.00,2.00,1.00,0.00,-3.00,-6.00,-10.00,Lower,Top,Wall,Club,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,0.00
+Crunch,Classic Brit,Crunch,On,1.00,-2.00,3.00,3.00,2.00,-4.00,-10.00,-10.00,Upper,Bite,Spank,Club,Edge,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Crunch,Punk Downstrokes,Crunch,On,2.00,-3.00,1.00,4.00,4.00,-8.00,-10.00,-10.00,Lower,Bite,Push,Club,Eight,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Crunch,Indie Jangle,Crunch,On,-1.00,-2.00,-2.00,5.00,1.00,1.00,-3.00,0.00,Upper,Roof,Spank,Hall,Edge,Wide,1.00,1.00,1.00,1.00,1.00,1.00
+Crunch,Garage Room,Crunch,On,1.00,-3.00,2.00,2.00,5.00,4.00,-8.00,-10.00,Lower,Top,Wall,Club,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,0.00
+Crunch,Southern Slide,Crunch,On,0.00,-2.00,3.00,0.00,4.00,1.00,0.00,-5.00,Lower,Roof,Push,Hall,Quarter,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Crunch,Crunch Doubletrack,Crunch,On,0.00,-3.00,2.00,2.00,3.00,-5.00,-10.00,4.00,Upper,Bite,Spank,Club,Eight,Wide,1.00,1.00,1.00,1.00,0.00,1.00
+Heavy,Modern Tight,Heavy,On,1.00,-3.00,1.00,4.00,4.00,-8.00,-10.00,-10.00,Upper,Bite,Push,Club,Eight,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Heavy,Drop Tune Punch,Heavy,On,0.00,-4.00,4.00,2.00,5.00,-7.00,-10.00,-10.00,Sub,Top,Spank,Club,Eight,Stereo,1.00,1.00,1.00,1.00,0.00,0.00
+Heavy,Doom Weight,Heavy,On,1.00,-4.00,7.00,-2.00,3.00,1.00,-6.00,-5.00,Sub,Roof,Wall,Hall,Quarter,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Heavy,Industrial Edge,Heavy,On,1.00,-4.00,-1.00,6.00,6.00,-5.00,-2.00,2.00,Upper,Bite,Push,Club,Edge,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+Heavy,Arena Stack,Heavy,On,0.00,-4.00,4.00,3.00,4.00,3.00,-4.00,2.00,Lower,Top,Wall,Arena,Quarter,Wide,1.00,1.00,1.00,1.00,1.00,1.00
+Heavy,Heavy Dry Focus,Heavy,On,0.00,-2.00,2.00,2.00,2.00,-10.00,-10.00,-10.00,Upper,Top,Push,Club,Eight,Stereo,1.00,1.00,1.00,0.00,0.00,0.00
+Heavy,Heavy Stereo Wall,Heavy,On,0.00,-4.00,5.00,2.00,5.00,-3.00,-8.00,5.00,Lower,Bite,Wall,Club,Edge,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Blues Lead,Crunch,On,1.00,-2.00,2.00,1.00,5.00,0.00,2.00,-8.00,Lower,Roof,Spank,Hall,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Singing Sustain,Heavy,On,0.00,-3.00,2.00,2.00,8.00,2.00,2.00,-4.00,Upper,Top,Wall,Hall,Quarter,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Fusion Smooth,Crunch,On,0.00,-2.00,3.00,-1.00,6.00,0.00,1.00,-5.00,Lower,Roof,Push,Club,Edge,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Focused Width Lead,Heavy,On,0.00,-4.00,1.00,4.00,7.00,3.00,3.00,5.00,Upper,Bite,Spank,Arena,Edge,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Ballad Solo,Crunch,On,0.00,-3.00,2.00,2.00,6.00,5.00,4.00,1.00,Lower,Top,Wall,Arena,Quarter,Wide,1.00,1.00,1.00,1.00,1.00,1.00
+Lead / Solo,Dry Forward Solo,Heavy,On,0.00,-2.00,0.00,3.00,8.00,-10.00,-10.00,-10.00,Upper,Bite,Push,Club,Eight,Stereo,1.00,1.00,1.00,0.00,0.00,0.00
+Lead / Solo,Wide Singing Lead,Heavy,On,0.00,-4.00,2.00,3.00,7.00,2.00,5.00,4.00,Lower,Top,Spank,Hall,Edge,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+FX / Special,Glass Cathedral,Clean,On,-1.00,-4.00,-3.00,5.00,3.00,9.00,5.00,6.00,Upper,Roof,Spank,Arena,Quarter,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+FX / Special,Dreamscape Wide,Clean,On,0.00,-4.00,1.00,2.00,4.00,7.00,7.00,8.00,Lower,Top,Wall,Hall,Quarter,Wide,1.00,1.00,1.00,1.00,1.00,1.00
+FX / Special,Short Echo Stereo,Clean,On,0.00,-3.00,-2.00,4.00,2.00,-4.00,8.00,4.00,Upper,Bite,Spank,Club,Eight,Stereo,1.00,1.00,1.00,1.00,1.00,1.00
+FX / Special,Dark Echo Cloud,Crunch,On,-1.00,-4.00,4.00,-5.00,4.00,8.00,9.00,3.00,Sub,Roof,Wall,Arena,Quarter,Spreader,1.00,1.00,1.00,1.00,1.00,1.00
+FX / Special,Pitch Halo,Clean,On,0.00,-4.00,-1.00,3.00,1.00,5.00,-10.00,9.00,Upper,Roof,Spank,Hall,Edge,Spreader,1.00,1.00,1.00,1.00,0.00,1.00
+FX / Special,Echo Only DI,Bypass,Off,0.00,-3.00,0.00,0.00,0.00,-10.00,8.00,-10.00,Upper,Roof,Wall,Club,Edge,Stereo,0.00,0.00,0.00,0.00,1.00,0.00
+FX / Special,Heavy Atmosphere,Heavy,On,-1.00,-5.00,4.00,2.00,6.00,9.00,8.00,7.00,Sub,Top,Wall,Arena,Quarter,Wide,1.00,1.00,1.00,1.00,1.00,1.00

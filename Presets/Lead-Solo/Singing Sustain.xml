@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<GuitarRack>
+  <PARAM id="amp" value="2.0"/>
+  <PARAM id="bass" value="2.0"/>
+  <PARAM id="bassColor" value="0.0"/>
+  <PARAM id="bassOn" value="1.0"/>
+  <PARAM id="compress" value="8.0"/>
+  <PARAM id="compressColor" value="0.0"/>
+  <PARAM id="compressOn" value="1.0"/>
+  <PARAM id="delay" value="2.0"/>
+  <PARAM id="delayColor" value="0.0"/>
+  <PARAM id="delayOn" value="1.0"/>
+  <PARAM id="input" value="0.0"/>
+  <PARAM id="output" value="-3.0"/>
+  <PARAM id="pitch" value="-4.0"/>
+  <PARAM id="pitchColor" value="2.0"/>
+  <PARAM id="pitchOn" value="1.0"/>
+  <PARAM id="reamp" value="1.0"/>
+  <PARAM id="reverb" value="2.0"/>
+  <PARAM id="reverbColor" value="1.0"/>
+  <PARAM id="reverbOn" value="1.0"/>
+  <PARAM id="treble" value="2.0"/>
+  <PARAM id="trebleColor" value="1.0"/>
+  <PARAM id="trebleOn" value="1.0"/>
+</GuitarRack>

@@ -22,7 +22,7 @@ O workflow `.github/workflows/windows.yml` compila com MSVC x64, executa testes 
 
 Input/Output e seis faders: −10 a +10. Re-Amplify: on/off; Clean, Crunch, Heavy, Bypass. Clique nos botões coloridos para alternar três modos; O menu ▾ ativa/desativa cada módulo. Os parâmetros estão expostos à automação da DAW. Os medidores exibem picos de entrada/saída e o LED de sensibilidade sinaliza o nível.
 
-Load contém 18 presets originais em Acoustic, Clean, Crunch, Heavy, Lead / Solo e FX / Special. A seleção atualiza todos os controles públicos, sem parâmetros sonoros ocultos. Input/Output são zerados e os seis módulos ativados. Save grava XML, Load user preset recupera XML. O estado completo é salvo na sessão da DAW. Não há presets atribuídos a artistas convidados sem valores oficiais fornecidos.
+Load contém 60 presets originais (10 por categoria) em Acoustic, Clean, Crunch, Heavy, Lead / Solo e FX / Special. A seleção atualiza todos os controles públicos, sem parâmetros sonoros ocultos: os seis faders, seis seleções Color, seis estados On/Off, o modo do knob, Re-Amplify e Input/Output. Os 18 programas anteriores mantêm os índices, os ganhos e os estados originais; 42 programas novos completam o banco. Save grava XML, Load user preset recupera XML. O estado completo é salvo na sessão da DAW. Não há presets atribuídos a artistas convidados sem valores oficiais fornecidos.
 
 ## Implementação e limites de fidelidade
 
@@ -65,3 +65,11 @@ O teste exercita Color, Undo, Redo e troca/restauração A/B antes de renderizar
 ![Imagem gerada como referência de materiais e iluminação](docs/visual-reference.png)
 
 Esta imagem gerada é uma referência de acabamento, não uma captura do VST3 e não está embutida como interface. A captura `docs/interface.png` acima mostra a interface realmente implementada. A referência inclui os acabamentos e o emblema Waves solicitados; a interface JUCE ainda apresenta diferenças visuais e não é indistinguível do produto original.
+
+## Banco de 60 presets
+
+Cada categoria contém 10 presets originais. O menu Load aplica automaticamente os controles, enquanto a DAW enxerga os 60 programas. A pasta `Presets/` contém os mesmos 60 ajustes em XML para Load user preset. `presets.csv` documenta cada valor de fader, Color, On/Off, modo, Re-Amplify e ganhos. O ZIP Windows inclui o VST3, os XMLs e a tabela.
+
+Não há parâmetros de efeito ocultos, efeitos novos ou cópia de presets oficiais. Os novos nomes são sugestões de uso; a resposta depende do sinal de entrada e ainda não houve audição comparativa em DAW. O modo Pitch é o detune/doubling já implementado, sem mudança de oitava.
+
+`preset_tests` carrega todos os 60 programas, verifica as seis categorias com 10 itens, mapeamento dos controles, limites, restauração de sessão e estabilidade do processamento estéreo. Esse teste é executado por CTest tanto no Linux quanto no workflow Windows. Para reexportar os XMLs e a tabela a partir do banco C++: `preset_tests /caminho/absoluto/Presets`.

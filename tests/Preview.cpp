@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include <iostream>
 #include <stdexcept>
+#include "FactoryBankChecks.h"
 
 static juce::TextButton* button(juce::Component& root,const juce::String& label) {
     if(auto* b=dynamic_cast<juce::TextButton*>(&root))if(b->getButtonText()==label)return b;
@@ -15,6 +16,7 @@ static juce::TextButton* arrow(juce::Component& root) {
 int main(int argc,char** argv) {
     juce::ScopedJuceInitialiser_GUI init;
     try {
+        testFactoryBank(argc>2?juce::File(argv[2]):juce::File{});
         GuitarProcessor processor;
         std::unique_ptr<juce::AudioProcessorEditor> editor(processor.createEditor());
         auto initial=processor.state.copyState();

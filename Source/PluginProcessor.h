@@ -26,7 +26,10 @@ public:
     void changeProgramName(int,const juce::String&) override {}
     void getStateInformation(juce::MemoryBlock&) override;
     void setStateInformation(const void*,int) override;
-    struct Preset {const char* folder;const char* name;int amp; bool reamp;std::array<float,6> faders;std::array<int,6> colors;};
+    struct Preset {const char* folder;const char* name;int amp; bool reamp;std::array<float,6> faders;std::array<int,6> colors;
+        std::array<bool,6> enabled{true,true,true,true,true,true};
+        float input=0,output=0;
+    };
     static const std::vector<Preset>& presets();
 private:
     int program=0;

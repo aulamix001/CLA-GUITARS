@@ -1,0 +1,15 @@
+GUITAR RACK — WINDOWS x64 VST3 — 60 PRESETS
+
+1. Extraia o pacote ZIP. Se veio do GitHub Actions, extraia também o ZIP interno.
+2. Copie a pasta inteira "Guitar Rack.vst3" para:
+   C:\Program Files\Common Files\VST3\
+3. Abra sua DAW de 64 bits e faça uma nova busca de plugins VST3.
+4. No Guitar Rack, abra Load: são 60 presets, 10 em cada categoria.
+
+A pasta Presets contém os mesmos 60 ajustes em XML, para Load user preset.
+Ela pode ser guardada em Documentos; não precisa ficar dentro da pasta VST3.
+O arquivo presets.csv documenta os valores de todos os controles.
+Os presets já estão embutidos no plugin; os XMLs são opcionais.
+
+Cada preset mapeia os seis faders, seis Colors, estados de ativação,
+modo Clean/Crunch/Heavy/Bypass, Re-Amplify e ganhos de entrada e saída.

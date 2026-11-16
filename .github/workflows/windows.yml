@@ -31,7 +31,10 @@ jobs:
             throw 'Windows x64 VST3 binary missing'
           }
           New-Item -ItemType Directory -Force dist | Out-Null
-          Compress-Archive -Path $plugin -DestinationPath 'dist/Guitar-Rack-Windows-x64-VST3.zip'
+          if ((Get-ChildItem Presets -Recurse -Filter *.xml).Count -ne 60) {
+            throw 'Expected 60 exported factory presets'
+          }
+          Compress-Archive -Path $plugin, 'Presets', 'presets.csv', 'docs/INSTALL-Windows.txt' -DestinationPath 'dist/Guitar-Rack-Windows-x64-VST3.zip'
           Get-FileHash 'dist/Guitar-Rack-Windows-x64-VST3.zip' -Algorithm SHA256 | Format-List
       - uses: actions/upload-artifact@v4
         with:

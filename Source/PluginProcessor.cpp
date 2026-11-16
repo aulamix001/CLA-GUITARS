@@ -52,7 +52,49 @@ const std::vector<GuitarProcessor::Preset>& GuitarProcessor::presets() {
       {"Lead / Solo","Screaming Lead",2,true,{0,5,8,2,3,-2},{1,2,2,1,1,2}},
       {"FX / Special","Ambient Glass",0,true,{-2,4,3,8,6,6},{0,0,1,0,0,0}},
       {"FX / Special","Wide Echo",1,true,{0,1,2,5,8,7},{1,1,1,1,0,1}},
-      {"FX / Special","Slap Texture",0,true,{-1,2,1,2,7,4},{0,2,2,2,2,2}}
+      {"FX / Special","Slap Texture",0,true,{-1,2,1,2,7,4},{0,2,2,2,2,2}},
+      {"Acoustic","Steel Studio",0,false,{-2,3,2,-6,-10,-10},{1,0,1,2,0,2},{true,true,true,true,false,false},0,-1},
+      {"Acoustic","Nylon Intimate",3,false,{2,1,-1,-5,-10,-10},{1,1,0,2,2,2},{true,true,true,true,false,false},1,-1},
+      {"Acoustic","Fingerstyle Air",0,false,{-1,5,3,-1,-8,-6},{0,0,1,1,1,2},{true,true,true,true,true,true},0,-2},
+      {"Acoustic","Strum Radio",0,false,{-3,4,5,-3,-10,-10},{0,2,2,2,0,2},{true,true,true,true,false,false},-1,-2},
+      {"Acoustic","Acoustic Cathedral",0,false,{1,3,2,7,1,0},{2,0,1,0,0,0},{true,true,true,true,true,true},0,-3},
+      {"Acoustic","Acoustic Double",0,false,{0,2,1,-4,-10,4},{1,1,1,2,2,1},{true,true,true,true,false,true},0,-2},
+      {"Acoustic","Acoustic Dry DI",3,false,{0,0,0,-10,-10,-10},{0,0,0,2,2,2},{false,false,false,false,false,false},0,0},
+      {"Clean","Pop Arpeggio",0,true,{-1,4,3,0,-2,-2},{0,0,1,1,1,2},{true,true,true,true,true,true},0,-2},
+      {"Clean","Disco Chops",0,true,{-4,5,6,-6,-10,-10},{0,2,2,2,2,2},{true,true,true,true,false,false},-1,-2},
+      {"Clean","Jazz Velvet",0,true,{3,-4,2,-4,-10,-10},{1,0,0,2,2,2},{true,true,true,true,false,false},0,-1},
+      {"Clean","Country Snap",0,true,{-2,4,5,-5,0,-10},{0,2,1,2,2,2},{true,true,true,true,true,false},0,-2},
+      {"Clean","Dream Chorus",0,true,{0,3,2,3,-1,5},{1,1,0,1,1,0},{true,true,true,true,true,true},0,-3},
+      {"Clean","Studio DI Polish",3,false,{-1,2,4,-10,-10,-10},{0,0,1,2,0,2},{true,true,true,false,false,false},1,-2},
+      {"Clean","Clean Stereo Rhythm",0,true,{1,2,3,-3,-7,3},{1,1,2,2,1,2},{true,true,true,true,true,true},0,-2},
+      {"Crunch","Blues Breakup",1,true,{2,1,0,-3,-6,-10},{1,1,0,2,2,2},{true,true,true,true,true,false},-2,-1},
+      {"Crunch","Classic Brit",1,true,{3,3,2,-4,-10,-10},{0,2,1,2,1,2},{true,true,true,true,false,false},1,-2},
+      {"Crunch","Punk Downstrokes",1,true,{1,4,4,-8,-10,-10},{1,2,2,2,2,2},{true,true,true,true,false,false},2,-3},
+      {"Crunch","Indie Jangle",1,true,{-2,5,1,1,-3,0},{0,0,1,1,1,1},{true,true,true,true,true,true},-1,-2},
+      {"Crunch","Garage Room",1,true,{2,2,5,4,-8,-10},{1,1,0,2,2,2},{true,true,true,true,true,false},1,-3},
+      {"Crunch","Southern Slide",1,true,{3,0,4,1,0,-5},{1,0,2,1,0,2},{true,true,true,true,true,true},0,-2},
+      {"Crunch","Crunch Doubletrack",1,true,{2,2,3,-5,-10,4},{0,2,1,2,2,1},{true,true,true,true,false,true},0,-3},
+      {"Heavy","Modern Tight",2,true,{1,4,4,-8,-10,-10},{0,2,2,2,2,2},{true,true,true,true,false,false},1,-3},
+      {"Heavy","Drop Tune Punch",2,true,{4,2,5,-7,-10,-10},{2,1,1,2,2,2},{true,true,true,true,false,false},0,-4},
+      {"Heavy","Doom Weight",2,true,{7,-2,3,1,-6,-5},{2,0,0,1,0,2},{true,true,true,true,true,true},1,-4},
+      {"Heavy","Industrial Edge",2,true,{-1,6,6,-5,-2,2},{0,2,2,2,1,0},{true,true,true,true,true,true},1,-4},
+      {"Heavy","Arena Stack",2,true,{4,3,4,3,-4,2},{1,1,0,0,0,1},{true,true,true,true,true,true},0,-4},
+      {"Heavy","Heavy Dry Focus",2,true,{2,2,2,-10,-10,-10},{0,1,2,2,2,2},{true,true,true,false,false,false},0,-2},
+      {"Heavy","Heavy Stereo Wall",2,true,{5,2,5,-3,-8,5},{1,2,0,2,1,2},{true,true,true,true,true,true},0,-4},
+      {"Lead / Solo","Blues Lead",1,true,{2,1,5,0,2,-8},{1,0,1,1,2,2},{true,true,true,true,true,true},1,-2},
+      {"Lead / Solo","Singing Sustain",2,true,{2,2,8,2,2,-4},{0,1,0,1,0,2},{true,true,true,true,true,true},0,-3},
+      {"Lead / Solo","Fusion Smooth",1,true,{3,-1,6,0,1,-5},{1,0,2,2,1,2},{true,true,true,true,true,true},0,-2},
+      {"Lead / Solo","Focused Width Lead",2,true,{1,4,7,3,3,5},{0,2,1,0,1,0},{true,true,true,true,true,true},0,-4},
+      {"Lead / Solo","Ballad Solo",1,true,{2,2,6,5,4,1},{1,1,0,0,0,1},{true,true,true,true,true,true},0,-3},
+      {"Lead / Solo","Dry Forward Solo",2,true,{0,3,8,-10,-10,-10},{0,2,2,2,2,2},{true,true,true,false,false,false},0,-2},
+      {"Lead / Solo","Wide Singing Lead",2,true,{2,3,7,2,5,4},{1,1,1,1,1,2},{true,true,true,true,true,true},0,-4},
+      {"FX / Special","Glass Cathedral",0,true,{-3,5,3,9,5,6},{0,0,1,0,0,0},{true,true,true,true,true,true},-1,-4},
+      {"FX / Special","Dreamscape Wide",0,true,{1,2,4,7,7,8},{1,1,0,1,0,1},{true,true,true,true,true,true},0,-4},
+      {"FX / Special","Short Echo Stereo",0,true,{-2,4,2,-4,8,4},{0,2,1,2,2,2},{true,true,true,true,true,true},0,-3},
+      {"FX / Special","Dark Echo Cloud",1,true,{4,-5,4,8,9,3},{2,0,0,0,0,0},{true,true,true,true,true,true},-1,-4},
+      {"FX / Special","Pitch Halo",0,true,{-1,3,1,5,-10,9},{0,0,1,1,1,0},{true,true,true,true,false,true},0,-4},
+      {"FX / Special","Echo Only DI",3,false,{0,0,0,-10,8,-10},{0,0,0,2,1,2},{false,false,false,false,true,false},0,-3},
+      {"FX / Special","Heavy Atmosphere",2,true,{4,2,6,9,8,7},{2,1,0,0,0,1},{true,true,true,true,true,true},-1,-5}
     }; return p;
 }
 int GuitarProcessor::getNumPrograms(){return (int)presets().size();}
@@ -61,8 +103,8 @@ void GuitarProcessor::setCurrentProgram(int i){
     if(!juce::isPositiveAndBelow(i,getNumPrograms()))return;
     program=i; auto& p=presets()[(size_t)i];
     auto set=[this](juce::String id,float v){auto* a=state.getParameter(id);a->beginChangeGesture();a->setValueNotifyingHost(a->convertTo0to1(v));a->endChangeGesture();};
-    set("amp",(float)p.amp);set("reamp",p.reamp?1.f:0.f);set("input",0);set("output",0);
-    for(int k=0;k<6;++k){juce::String id=ids[k];set(id,p.faders[k]);set(id+"Color",(float)p.colors[k]);set(id+"On",1);}
+    set("amp",(float)p.amp);set("reamp",p.reamp?1.f:0.f);set("input",p.input);set("output",p.output);
+    for(int k=0;k<6;++k){juce::String id=ids[k];set(id,p.faders[k]);set(id+"Color",(float)p.colors[k]);set(id+"On",p.enabled[(size_t)k]?1.f:0.f);}
 }
 void GuitarProcessor::getStateInformation(juce::MemoryBlock& b){auto tree=state.copyState();tree.setProperty("program",program,nullptr);auto xml=tree.createXml();copyXmlToBinary(*xml,b);}
 void GuitarProcessor::setStateInformation(const void* d,int n){if(auto xml=getXmlFromBinary(d,n)){auto t=juce::ValueTree::fromXml(*xml);if(t.hasType(state.state.getType())){program=juce::jlimit(0,getNumPrograms()-1,(int)t.getProperty("program",0));state.replaceState(t);}}}
