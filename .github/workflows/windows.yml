@@ -8,11 +8,19 @@ jobs:
   build:
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Configure MSVC x64
         run: cmake -S . -B build -A x64 -DBUILD_TESTING=ON
       - name: Build plugin and tests
-        run: cmake --build build --config Release --parallel 2
+        shell: pwsh
+        run: |
+          cmake --build build --config Release --parallel 2 2>&1 | Tee-Object -FilePath build.log
+          $result = $LASTEXITCODE
+          if ($result -ne 0) {
+            $errors = Get-Content build.log | Select-String -Pattern 'error [A-Z]+[0-9]+|fatal error|error:|Error [A-Z]+[0-9]+' | Select-Object -First 15
+            foreach ($line in $errors) { Write-Output "::error::$line" }
+            exit $result
+          }
       - name: Test DSP
         run: ctest --test-dir build -C Release --output-on-failure
       - name: Package Windows VST3
