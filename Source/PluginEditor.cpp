@@ -18,7 +18,23 @@ GuitarEditor::GuitarEditor(GuitarProcessor& p):AudioProcessorEditor(p),processor
  for(int k=0;k<6;++k){addAndMakeVisible(colors[k]);colors[k].onClick=[this,k]{auto* a=processor.state.getParameter(juce::String(ids[k+1])+"Color");int next=((int)processor.state.getRawParameterValue(juce::String(ids[k+1])+"Color")->load()+1)%3;a->beginChangeGesture();a->setValueNotifyingHost(a->convertTo0to1((float)next));a->endChangeGesture();};addAndMakeVisible(enabled[k]);enabled[k].setButtonText("ON");buttons.push_back(std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(p.state,juce::String(ids[k+1])+"On",enabled[k]));}
  addAndMakeVisible(reamp);buttons.push_back(std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(p.state,"reamp",reamp));
  addAndMakeVisible(amp);amp.addItemList({"Clean","Crunch","Heavy","Bypass"},1);ampAttachment=std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(p.state,"amp",amp);
- addAndMakeVisible(load);load.onClick=[this]{presetMenu();};addAndMakeVisible(save);save.onClick=[this]{chooser=std::make_unique<juce::FileChooser>("Save preset",juce::File{},"*.xml");chooser->launchAsync(juce::FileBrowserComponent::saveMode|juce::FileBrowserComponent::canSelectFiles|juce::FileBrowserComponent::warnAboutOverwriting,[safe=juce::Component::SafePointer<GuitarEditor>(this)](const juce::FileChooser& c){if(safe && c.getResult()!=juce::File{})safe->processor.state.copyState().createXml()->writeTo(c.getResult().withFileExtension("xml"));});};startTimerHz(30);
+ addAndMakeVisible(load);load.onClick=[this]{presetMenu();};addAndMakeVisible(save);
+ save.onClick=[this] { savePreset(); };
+ startTimerHz(30);
+}
+void GuitarEditor::savePreset() {
+ chooser=std::make_unique<juce::FileChooser>("Save preset",juce::File{},"*.xml");
+ const juce::Component::SafePointer<GuitarEditor> safe(this);
+ chooser->launchAsync(
+     juce::FileBrowserComponent::saveMode
+         | juce::FileBrowserComponent::canSelectFiles
+         | juce::FileBrowserComponent::warnAboutOverwriting,
+     [safe](const juce::FileChooser& fileChooser) {
+         if (safe == nullptr || fileChooser.getResult() == juce::File{})
+             return;
+         auto xml = safe->processor.state.copyState().createXml();
+         xml->writeTo(fileChooser.getResult().withFileExtension("xml"));
+     });
 }
 void GuitarEditor::presetMenu(){
  juce::PopupMenu menu;auto& presets=GuitarProcessor::presets();

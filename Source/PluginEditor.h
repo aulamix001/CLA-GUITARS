@@ -26,4 +26,5 @@ private:
  float meterIn=0,meterOut=0;
  void timerCallback() override;
  void presetMenu();
+ void savePreset();
 };
