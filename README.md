@@ -40,7 +40,7 @@ cmake --build build-dsp
 ctest --test-dir build-dsp --output-on-failure
 ```
 
-Testa bypass unitário, medidores, estabilidade dos efeitos/cores, cauda do delay e ganho de saída a 44.1, 48 e 96 kHz. O VST3 Windows x64 foi compilado com MSVC no GitHub Actions, e os testes DSP, empacotamento e upload passaram. [Baixe o artefato Guitar-Rack-Windows-x64-VST3](https://github.com/aulamix001/CLA-GUITARS/actions/runs/43795023814#artifacts) (login no GitHub necessário). O download contém o ZIP com a pasta VST3 completa. A compilação Linux também passou. Ainda são necessários testes manuais em DAW, automação, salvar/reabrir sessão, mono→estéreo, presets, redimensionamento e audição. Consulte `BUILD_STATUS.md` para o commit e a execução validados.
+Testa bypass unitário, medidores, estabilidade dos efeitos/cores, cauda do delay e ganho de saída a 44.1, 48 e 96 kHz. O VST3 Windows x64 foi compilado com MSVC no GitHub Actions, e os testes DSP, empacotamento e upload passaram. [Baixe o artefato Guitar-Rack-Windows-x64-VST3](https://github.com/aulamix001/CLA-GUITARS/actions/runs/43798271201#artifacts) (login no GitHub necessário). O download contém o ZIP com a pasta VST3 completa. A compilação Linux também passou. Ainda são necessários testes manuais em DAW, automação, salvar/reabrir sessão, mono→estéreo, presets, redimensionamento e audição. Consulte `BUILD_STATUS.md` para o commit e a execução validados.
 
 ## Interface de referência e acabamento vintage
 
@@ -59,3 +59,9 @@ cmake --build build-ui --target RackPreview
 ```
 
 O teste exercita Color, Undo, Redo e troca/restauração A/B antes de renderizar o editor.
+
+### Imagem de direção visual
+
+![Imagem gerada como referência de materiais e iluminação](docs/visual-reference.png)
+
+Esta imagem gerada é uma referência de acabamento, não uma captura do VST3 e não está embutida como interface. A captura `docs/interface.png` acima mostra a interface realmente implementada. A referência inclui os acabamentos e o emblema Waves solicitados; a interface JUCE ainda apresenta diferenças visuais e não é indistinguível do produto original.
