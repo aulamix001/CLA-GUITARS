@@ -16,7 +16,7 @@ O CMake obtém JUCE 8.0.6 fixado em commit. Alternativamente use `-DJUCE_PATH=C:
 
 Resultado: `build/CLAInspiredGuitar_artefacts/Release/VST3/Guitar Rack.vst3`. Copie **a pasta inteira** para `C:\Program Files\Common Files\VST3\` e reescaneie na DAW. Também é gerado um aplicativo Standalone para testes. Interface e processamento aceitam entrada mono/estéreo e saída estéreo.
 
-O workflow `.github/workflows/windows.yml` compila com MSVC x64, executa testes e disponibiliza a pasta VST3 como artefato. Precisa estar publicado no GitHub e executar com sucesso; não foi executado pelo agente.
+O workflow `.github/workflows/windows.yml` compila com MSVC x64, executa testes e disponibiliza a pasta VST3 como artefato. Foi executado com sucesso para Windows x64; veja o link de download no fim deste documento.
 
 ## Controles e presets
 
@@ -40,4 +40,4 @@ cmake --build build-dsp
 ctest --test-dir build-dsp --output-on-failure
 ```
 
-Testa bypass unitário, medidores, estabilidade dos efeitos/cores, cauda do delay e ganho de saída a 44.1, 48 e 96 kHz. O plugin VST3 Linux completo, incluindo interface e wrapper JUCE, foi compilado com sucesso em Release. O manifesto VST3 foi gerado carregando o módulo Linux. Ainda é necessário compilar para Windows e validar em host/DAW, automação, salvar/reabrir sessão, mono→estéreo, presets, redimensionamento e audição. JUCE 8 rejeita MinGW; a alternativa Clang/MSVC SDK está bloqueada pelo proxy HTTP 403 ao obter o SDK em `download.visualstudio.microsoft.com`. A inclusão desse domínio foi salva no rascunho do ambiente e ainda precisa ser aplicada/publicada pelo usuário. Não há binário Windows validado nesta entrega.
+Testa bypass unitário, medidores, estabilidade dos efeitos/cores, cauda do delay e ganho de saída a 44.1, 48 e 96 kHz. O VST3 Windows x64 foi compilado com MSVC no GitHub Actions, e os testes DSP, empacotamento e upload passaram. [Baixe o artefato Guitar-Rack-Windows-x64-VST3](https://github.com/aulamix001/CLA-GUITARS/actions/runs/43795023814#artifacts) (login no GitHub necessário). O download contém o ZIP com a pasta VST3 completa. A compilação Linux também passou. Ainda são necessários testes manuais em DAW, automação, salvar/reabrir sessão, mono→estéreo, presets, redimensionamento e audição. Consulte `BUILD_STATUS.md` para o commit e a execução validados.
