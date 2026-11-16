@@ -3,41 +3,61 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    tags: ['v*.*.*']
   pull_request:
+permissions:
+  contents: read
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Configure MSVC x64
-        run: cmake -S . -B build -A x64 -DBUILD_TESTING=ON
+      - name: Configure MSVC x64 Release
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=ON -DBUILD_UI_PREVIEW=ON
       - name: Build plugin and tests
+        run: cmake --build build --config Release --parallel 2
+      - name: Test DSP, pitch, presets and editor
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Install pluginval 1.0.4
         shell: pwsh
         run: |
-          cmake --build build --config Release --parallel 2 2>&1 | Tee-Object -FilePath build.log
-          $result = $LASTEXITCODE
-          if ($result -ne 0) {
-            $errors = Get-Content build.log | Select-String -Pattern 'error [A-Z]+[0-9]+|fatal error|error:|Error [A-Z]+[0-9]+' | Select-Object -First 15
-            foreach ($line in $errors) { Write-Output "::error::$line" }
-            exit $result
-          }
-      - name: Test DSP
-        run: ctest --test-dir build -C Release --output-on-failure
+          Invoke-WebRequest 'https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Windows.zip' -OutFile pluginval.zip
+          Expand-Archive pluginval.zip -DestinationPath tools/pluginval
+      - name: Validate VST3 at level 10
+        shell: pwsh
+        run: |
+          $validator = (Get-ChildItem tools/pluginval -Recurse -Filter pluginval.exe | Select-Object -First 1).FullName
+          if (!$validator) { throw 'pluginval.exe missing' }
+          & $validator --strictness-level 10 --timeout-ms 300000 --validate 'build/CLAInspiredGuitar_artefacts/Release/VST3/Guitar Rack.vst3'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Package Windows VST3
         shell: pwsh
         run: |
           $plugin = 'build/CLAInspiredGuitar_artefacts/Release/VST3/Guitar Rack.vst3'
-          if (!(Test-Path "$plugin/Contents/x86_64-win/Guitar Rack.vst3")) {
-            throw 'Windows x64 VST3 binary missing'
-          }
+          if (!(Test-Path "$plugin/Contents/x86_64-win/Guitar Rack.vst3")) { throw 'Windows x64 VST3 binary missing' }
+          if ((Get-ChildItem Presets -Recurse -Filter *.xml).Count -ne 60) { throw 'Expected 60 exported factory presets' }
           New-Item -ItemType Directory -Force dist | Out-Null
-          if ((Get-ChildItem Presets -Recurse -Filter *.xml).Count -ne 60) {
-            throw 'Expected 60 exported factory presets'
-          }
-          Compress-Archive -Path $plugin, 'Presets', 'presets.csv', 'docs/INSTALL-Windows.txt' -DestinationPath 'dist/Guitar-Rack-Windows-x64-VST3.zip'
+          Compress-Archive -Path $plugin, 'Presets', 'presets.csv', 'docs/INSTALL-Windows.txt', 'docs/licenses' -DestinationPath 'dist/Guitar-Rack-Windows-x64-VST3.zip'
           Get-FileHash 'dist/Guitar-Rack-Windows-x64-VST3.zip' -Algorithm SHA256 | Format-List
       - uses: actions/upload-artifact@v4
         with:
           name: Guitar-Rack-Windows-x64-VST3
           path: dist/Guitar-Rack-Windows-x64-VST3.zip
           if-no-files-found: error
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Guitar-Rack-Windows-x64-VST3
+          path: dist
+      - name: Publish tagged release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" dist/Guitar-Rack-Windows-x64-VST3.zip --verify-tag --title "$RELEASE_TAG" --generate-notes

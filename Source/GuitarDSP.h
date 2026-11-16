@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <vector>
+#include "PitchShifter.h"
 
 namespace guitar {
 constexpr float pi = 3.14159265358979323846f;
@@ -43,30 +44,35 @@ struct DelayLine {
 };
 class Engine {
     double sr=48000; std::array<Biquad,2> low,high;
-    std::array<DelayLine,2> echoes,shift;
+    std::array<DelayLine,2> echoes;
+    PitchShifter pitchShifter;
+    float pitchMix = 0, smoothing = 0;
     std::array<std::array<DelayLine,4>,2> room;
     std::array<float,2> env{},cab{},echoTone{};
     Settings current{},target{};
-    float phase=0, envelopeAttack=0,envelopeRelease=0;
+    float envelopeAttack=0,envelopeRelease=0;
     int coeffCountdown=0;
 public:
     float inputPeak=0,outputPeak=0;
     void prepare(double rate) {
-        sr=rate; low={}; high={}; env={}; cab={}; echoTone={}; phase=0; coeffCountdown=0;
+        sr=rate; low={}; high={}; env={}; cab={}; echoTone={}; coeffCountdown=0;
+        pitchShifter.prepare(rate); pitchMix=0;
+        smoothing=1-std::exp(-1.0f/static_cast<float>(sr*0.01));
         current=target=Settings{}; inputPeak=outputPeak=0;
         envelopeAttack=std::exp(-1.0f/static_cast<float>(sr*0.005));
         envelopeRelease=std::exp(-1.0f/static_cast<float>(sr*0.12));
         for(int c=0;c<2;++c) {
-            echoes[c].prepare(static_cast<size_t>(sr*2.1)); shift[c].prepare(static_cast<size_t>(sr*0.15));
+            echoes[c].prepare(static_cast<size_t>(sr*2.1));
             for(int k=0;k<4;++k) room[c][k].prepare(static_cast<size_t>(sr*0.15));
         }
     }
+    int latencySamples() const { return pitchShifter.latencySamples(); }
     void set(const Settings& s) { target=s; }
     void process(float* left,float* right,int count) {
         inputPeak=outputPeak=0;
         for(int i=0;i<count;++i) {
             // Smooth continuously automated gains and amounts over about 10 ms.
-            float a=1-std::exp(-1.0f/static_cast<float>(sr*0.01));
+            float a=smoothing;
             auto smooth=[a](float& x,float t){x+=a*(t-x);};
             smooth(current.input,target.input); smooth(current.output,target.output);
             smooth(current.bass,target.bass); smooth(current.treble,target.treble); smooth(current.compress,target.compress);
@@ -80,7 +86,7 @@ public:
                 coeffCountdown=32;
             }
             float in[2]={left[i],right[i]};
-            phase+=1.0f/static_cast<float>(sr*0.08); if(phase>=1) phase-=1;
+            std::array<float,2> beforePitch{};
             for(int c=0;c<2;++c) {
                 float x=in[c]*gain(current.input); inputPeak=std::max(inputPeak,std::abs(x));
                 if(target.reamp && target.amp!=3) {
@@ -111,16 +117,17 @@ public:
                     room[c][k].push(x+(target.enabled[3]?v*(0.68f+0.06f*target.color[3]):0)); wet+=v*0.25f;
                 }
                 if(target.enabled[3]) x+=wet*gain(current.reverb)*0.22f;
-                // Dual crossfaded variable delay taps: detuned doubling / widening.
-                float p=phase+(c?0.5f:0); if(p>=1)p-=1;
-                float q=p+0.5f; if(q>=1)q-=1;
-                float window=0.5f-0.5f*std::cos(2*pi*p);
-                float depth=(target.color[5]==0?0.002f:target.color[5]==1?0.004f:0.008f)*static_cast<float>(sr);
-                float shifted=shift[c].read(0.012f*static_cast<float>(sr)+p*depth)*window
-                    +shift[c].read(0.012f*static_cast<float>(sr)+q*depth)*(1-window);
-                shift[c].push(x);
-                if(target.enabled[5]) x+=shifted*gain(current.pitch)*0.18f;
-                x*=gain(current.output); if(!std::isfinite(x))x=0;
+                beforePitch[static_cast<size_t>(c)]=x;
+            }
+            // Preserve the original fader's wet-gain semantics and Color detune ratios.
+            // Fixed latency also applies when disabled: no timeline jumps on automation.
+            constexpr double ratios[]={0.975,0.95,0.9};
+            std::array<float,2> wet{},dry{};
+            pitchShifter.process(beforePitch,12.0*std::log2(ratios[std::clamp(target.color[5],0,2)]),wet,dry);
+            smooth(pitchMix,target.enabled[5]?gain(current.pitch)*0.18f:0.f);
+            for(int c=0;c<2;++c) {
+                float x=(dry[static_cast<size_t>(c)]+wet[static_cast<size_t>(c)]*pitchMix)*gain(current.output);
+                if(!std::isfinite(x))x=0;
                 outputPeak=std::max(outputPeak,std::abs(x));
                 (c?right:left)[i]=x;
             }

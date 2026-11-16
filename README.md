@@ -4,7 +4,7 @@ Plugin independente para guitarra, inspirado no fluxo de controles das referênc
 
 ## Compilar no Windows
 
-Instale Visual Studio 2022 com **Desktop development with C++**, Windows SDK, CMake >= 3.22 e Git. No Developer PowerShell:
+Instale Visual Studio 2022 com **Desktop development with C++**, Windows SDK, CMake >= 3.24 e Git. No Developer PowerShell:
 
 ```powershell
 cmake -S . -B build -A x64
@@ -20,13 +20,13 @@ O workflow `.github/workflows/windows.yml` compila com MSVC x64, executa testes 
 
 ## Controles e presets
 
-Input/Output e seis faders: −10 a +10. Re-Amplify: on/off; Clean, Crunch, Heavy, Bypass. Clique nos botões coloridos para alternar três modos; O menu ▾ ativa/desativa cada módulo. Os parâmetros estão expostos à automação da DAW. Os medidores exibem picos de entrada/saída e o LED de sensibilidade sinaliza o nível.
+Input/Output e seis faders: −10 a +10. Re-Amplify: on/off; Clean, Crunch, Heavy, Bypass. Cada seta percorre os modos de baixo para cima e então desliga o módulo, apagando os destaques. Em BASS: SUB → LOWER → UPPER → apagado → SUB. Não aparece um quarto rótulo OFF no visor. Cada módulo é independente; o menu ▾ também permite ativá-lo/desativá-lo. Clique no visor para avançar Color, ou Shift+clique para retroceder. Presets carregam faders, modos e estados; alterações manuais posteriores continuam livres. Os parâmetros estão expostos à automação da DAW. Os medidores exibem picos de entrada/saída e o LED de sensibilidade sinaliza o nível.
 
 Load contém 60 presets originais (10 por categoria) em Acoustic, Clean, Crunch, Heavy, Lead / Solo e FX / Special. A seleção atualiza todos os controles públicos, sem parâmetros sonoros ocultos: os seis faders, seis seleções Color, seis estados On/Off, o modo do knob, Re-Amplify e Input/Output. Os 18 programas anteriores mantêm os índices, os ganhos e os estados originais; 42 programas novos completam o banco. Save grava XML, Load user preset recupera XML. O estado completo é salvo na sessão da DAW. Não há presets atribuídos a artistas convidados sem valores oficiais fornecidos.
 
 ## Implementação e limites de fidelidade
 
-Re-Amplify usa saturação tanh e filtro de gabinete simples; Bass/Treble usam shelves; Compress usa envelope e ganho dependente do nível; Reverb usa quatro combs por canal; Delay usa taps e feedback filtrado; Pitch usa dois taps modulados com crossfade. As cores selecionam frequências, razão, tamanho ou tap conforme o módulo. Não há modelo de amplificador medido, IR de gabinete, oversampling, sincronismo de tempo da DAW ou pitch shifter de qualidade comercial.
+Re-Amplify usa saturação tanh e filtro de gabinete simples; Bass/Treble usam shelves; Compress usa envelope e ganho dependente do nível; Reverb usa quatro combs por canal; Delay usa taps e feedback filtrado; Pitch usa Signalsmith Stretch 1.3.2 (MIT), com análise espectral estéreo, ligação de fase entre canais, precisão interna double e sobreposição de janelas de 120 ms a cada 5 ms. O fader continua sendo nível do detune em dB, não semitons, preservando IDs e valores dos presets. Spreader/Wide/Stereo mantêm razões 0,975/0,95/0,9; a transposição é suavizada em 30 ms e o nível em aproximadamente 10 ms. Há 120 ms de latência fixa, informada ao host e compensada nos caminhos seco e bypass. Essa latência é uma limitação importante para tocar ao vivo. As cores selecionam frequências, razão, tamanho ou tap conforme o módulo. Não há modelo de amplificador medido, IR de gabinete, oversampling, sincronismo de tempo da DAW ou pitch shifter de qualidade comercial.
 
 As páginas do manual vieram em imagens de baixa resolução. Os nomes de Delay (Quarter / Edge / Eight) e as posições iniciais seguem a descrição visual fornecida pelo usuário. Frequências, tempos e regras exatas do LED ainda não foram confirmados em especificações técnicas do fabricante. Os valores internos são **aproximações próprias**, não especificações extraídas do original. A interface é desenhada em vetores com tecido procedural, metal, sombras e faders móveis; não é cópia pixel a pixel. Não existe processamento de áudio dentro das imagens geradas anteriormente.
 
@@ -46,7 +46,7 @@ Testa bypass unitário, medidores, estabilidade dos efeitos/cores, cauda do dela
 
 ![Interface renderizada pelo plugin](docs/interface.png)
 
-A captura foi gerada pelo editor real de JUCE a 1120 × 720; os níveis dos medidores foram injetados pelo teste de renderização. O editor mantém a proporção durante redimensionamento, com tecido marrom/dourado, chave metálica iluminada, knob de borda serrilhada, oito faders prateados escovados e sombras laterais. Seletores Color e valores iniciais seguem a descrição visual do usuário. A aparência foi recriada; não é comprovadamente idêntica pixel a pixel ao original.
+A captura foi gerada pelo editor real de JUCE a 1680 × 1080; os níveis dos medidores foram injetados pelo teste de renderização. O editor mantém a proporção durante redimensionamento, com tecido marrom/dourado, chave metálica iluminada, knob de borda serrilhada, oito faders prateados escovados e sombras laterais. As setas selecionam modos e desativam o módulo conforme o ciclo descrito acima; estados de presets e automação permanecem sincronizados. A aparência foi recriada; não é comprovadamente idêntica pixel a pixel ao original.
 
 A/B alterna dois estados; ▾ copia o estado ao outro slot, restaura os ajustes de referência e ativa/desativa módulos. Undo/Redo restaura parâmetros. Histórico e slots A/B vivem durante a sessão do editor; o estado de áudio ativo continua sendo salvo pela DAW. Os medidores L/R usam picos independentes de cada canal. Nenhum efeito de áudio foi substituído por uma imagem estática.
 
@@ -58,7 +58,9 @@ cmake --build build-ui --target RackPreview
 ./build-ui/RackPreview_artefacts/Release/RackPreview /tmp/guitar-rack-ui.png
 ```
 
-O teste exercita Color, Undo, Redo e troca/restauração A/B antes de renderizar o editor.
+O teste exercita os seis ciclos de modo/desligamento com eventos de mouse, independência, áudio de cada módulo, automação, restauração de sessão, Pitch, Undo, Redo, A/B, redimensionamento e abertura/fechamento antes de renderizar o editor.
+
+A validação desta revisão local e suas limitações estão em [docs/VALIDATION-PITCH-UI.md](docs/VALIDATION-PITCH-UI.md). As instruções e artefatos Windows anteriores neste README são históricos; a nova revisão foi compilada e validada no Linux, sem execução local do MSVC/Studio One.
 
 ### Imagem de direção visual
 

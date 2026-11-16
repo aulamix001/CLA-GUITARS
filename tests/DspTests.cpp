@@ -6,9 +6,11 @@ void require(bool ok,const char* reason){if(!ok)throw std::runtime_error(reason)
 int main(){try{
  for(double sr:{44100.,48000.,96000.}) {
   guitar::Engine e;e.prepare(sr);guitar::Settings s;s.reamp=false;s.enabled.fill(false);e.set(s);
-  std::vector<float> l(1024),r(1024);for(int i=0;i<1024;++i)l[i]=r[i]=std::sin(i*0.12f)*0.2f;
-  auto ref=l;e.process(l.data(),r.data(),1024);
-  for(int i=0;i<1024;++i)require(std::abs(l[i]-ref[i])<1e-5f,"Bypass must be unity");
+  std::vector<float> l(static_cast<size_t>(e.latencySamples()+1024)),r(l.size());for(size_t i=0;i<l.size();++i)l[i]=r[i]=std::sin(i*0.12f)*0.2f;
+  auto ref=l;e.process(l.data(),r.data(),(int)l.size());
+  for(int i=0;i<e.latencySamples();++i)require(l[(size_t)i]==0,"Dry path must have declared latency");
+  for(int i=0;i<1024;++i)require(std::abs(l[(size_t)(i+e.latencySamples())]-ref[(size_t)i])<1e-5f,"Bypass must be latency-compensated unity");
+  l.resize(1024);r.resize(1024);
   require(e.inputPeak>0.19f && e.outputPeak>0.19f,"Meters must reflect audio");
   s.enabled.fill(true);s.amp=2;s.reamp=true;s.bass=s.treble=s.compress=s.reverb=s.delay=s.pitch=10;
   std::mt19937 rng(42);std::uniform_real_distribution<float> noise(-0.3f,0.3f);
@@ -20,6 +22,6 @@ int main(){try{
   for(int block=0;block<50;++block){std::fill(l.begin(),l.end(),0.5f);std::fill(r.begin(),r.end(),0.5f);e.process(l.data(),r.data(),1024);}
   require(std::abs(l.back()-0.5f*guitar::gain(-6))<1e-4f,"Output gain must settle correctly");
  }
- std::cout<<"PASS: unity bypass, meters, 3 colors stability, delay tail and gain at 44.1/48/96 kHz\n";
+ std::cout<<"PASS: latency-aligned unity bypass, meters, 3 colors stability, delay tail and gain at 44.1/48/96 kHz\n";
  return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

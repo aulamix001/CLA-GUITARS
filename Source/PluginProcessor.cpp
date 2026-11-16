@@ -1,6 +1,28 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-namespace { const char* ids[]={"bass","treble","compress","reverb","delay","pitch"}; }
+namespace {
+// JUCE 8 AudioParameterBool retains fractional normalized writes internally.
+// Snap host automation at the parameter boundary so state/GUI/DSP agree exactly.
+class SwitchParameter : public juce::RangedAudioParameter {
+    std::atomic<float> value;
+    const float initial;
+    const juce::NormalisableRange<float> range{0.f,1.f,1.f};
+public:
+    SwitchParameter(const juce::ParameterID& id,const juce::String& name,bool enabled)
+        : juce::RangedAudioParameter(id,name,juce::AudioProcessorParameterWithIDAttributes{}),value(enabled?1.f:0.f),initial(enabled?1.f:0.f) {}
+    const juce::NormalisableRange<float>& getNormalisableRange() const override { return range; }
+    float getValue() const override { return value.load(); }
+    void setValue(float normalized) override { value.store(normalized>=.5f?1.f:0.f); }
+    float getDefaultValue() const override { return initial; }
+    int getNumSteps() const override { return 2; }
+    bool isDiscrete() const override { return true; }
+    bool isBoolean() const override { return true; }
+    juce::String getText(float v,int) const override { return v>=.5f?"On":"Off"; }
+    float getValueForText(const juce::String& text) const override {
+        return text.equalsIgnoreCase("on")||text.equalsIgnoreCase("true")||text.equalsIgnoreCase("yes")||text.getFloatValue()>=.5f?1.f:0.f;
+    }
+};
+const char* ids[]={"bass","treble","compress","reverb","delay","pitch"}; }
 juce::AudioProcessorValueTreeState::ParameterLayout GuitarProcessor::layout() {
     juce::AudioProcessorValueTreeState::ParameterLayout l;
     for(auto id:{"input","output"}) l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,-10.f,10.f,juce::String(id)=="input"?1.f:2.f));
@@ -11,27 +33,47 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarProcessor::layout() {
         juce::String id=ids[i];
         l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,-10.f,10.f,defaults[i]));
         l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{id+"Color",1},id+" Color",colors[i],defaultColors[i]));
-        l.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{id+"On",1},id+" On",true));
+        l.add(std::make_unique<SwitchParameter>(juce::ParameterID{id+"On",1},id+" On",true));
     }
     l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"amp",1},"Amp",juce::StringArray{"Clean","Crunch","Heavy","Bypass"},2));
-    l.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"reamp",1},"Re-Amplify",true));
+    l.add(std::make_unique<SwitchParameter>(juce::ParameterID{"reamp",1},"Re-Amplify",true));
     return l;
 }
-GuitarProcessor::GuitarProcessor():AudioProcessor(BusesProperties().withInput("Input",juce::AudioChannelSet::stereo(),true).withOutput("Output",juce::AudioChannelSet::stereo(),true)),state(*this,nullptr,"GuitarRack",layout()) {}
+GuitarProcessor::GuitarProcessor():AudioProcessor(BusesProperties().withInput("Input",juce::AudioChannelSet::stereo(),true).withOutput("Output",juce::AudioChannelSet::stereo(),true)),state(*this,nullptr,"GuitarRack",layout()) {
+    const char* faders[]={"input","bass","treble","compress","reverb","delay","pitch","output"};
+    for(size_t i=0;i<8;++i)faderParameters[i]=state.getRawParameterValue(faders[i]);
+    for(size_t i=0;i<6;++i){colorParameters[i]=state.getRawParameterValue(juce::String(ids[i])+"Color");enabledParameters[i]=state.getRawParameterValue(juce::String(ids[i])+"On");}
+    ampParameter=state.getRawParameterValue("amp");reampParameter=state.getRawParameterValue("reamp");
+}
 bool GuitarProcessor::isBusesLayoutSupported(const BusesLayout& l) const {
     return l.getMainOutputChannelSet()==juce::AudioChannelSet::stereo() && (l.getMainInputChannelSet()==juce::AudioChannelSet::mono() || l.getMainInputChannelSet()==juce::AudioChannelSet::stereo());
 }
 void GuitarProcessor::processBlock(juce::AudioBuffer<float>& b,juce::MidiBuffer&) {
     juce::ScopedNoDenormals nd;
     if(getTotalNumInputChannels()==1) b.copyFrom(1,0,b,0,0,b.getNumSamples());
-    auto value=[this](juce::String id){return state.getRawParameterValue(id)->load();};
-    guitar::Settings s; s.input=value("input");s.output=value("output");s.reamp=value("reamp")>0.5f;s.amp=(int)value("amp");
+    delayDryInput(b,false);
+    guitar::Settings s;s.input=faderParameters[0]->load();s.output=faderParameters[7]->load();s.reamp=reampParameter->load()>.5f;s.amp=(int)ampParameter->load();
     float* f[]={&s.bass,&s.treble,&s.compress,&s.reverb,&s.delay,&s.pitch};
-    for(int i=0;i<6;++i){*f[i]=value(ids[i]);s.color[i]=(int)value(juce::String(ids[i])+"Color");s.enabled[i]=value(juce::String(ids[i])+"On")>0.5f;}
+    for(size_t i=0;i<6;++i){*f[i]=faderParameters[i+1]->load();s.color[i]=(int)colorParameters[i]->load();s.enabled[i]=enabledParameters[i]->load()>.5f;}
     for(int c=0;c<2;++c)inputChannels[(size_t)c].store(b.getMagnitude(c,0,b.getNumSamples())*guitar::gain(s.input));
     engine.set(s);engine.process(b.getWritePointer(0),b.getWritePointer(1),b.getNumSamples());
     for(int c=0;c<2;++c)outputChannels[(size_t)c].store(b.getMagnitude(c,0,b.getNumSamples()));
     inMeter.store(engine.inputPeak);outMeter.store(engine.outputPeak);
+}
+void GuitarProcessor::delayDryInput(juce::AudioBuffer<float>& b,bool replaceOutput) {
+    if(bypassDelay[0].empty())return;
+    for(int n=0;n<b.getNumSamples();++n){
+        for(int c=0;c<2;++c){
+            auto& sample=bypassDelay[static_cast<size_t>(c)][bypassHead];
+            const float delayed=sample;sample=b.getSample(c,n);
+            if(replaceOutput)b.setSample(c,n,delayed);
+        }
+        bypassHead=(bypassHead+1)%bypassDelay[0].size();
+    }
+}
+void GuitarProcessor::processBlockBypassed(juce::AudioBuffer<float>& b,juce::MidiBuffer&) {
+    if(getTotalNumInputChannels()==1)b.copyFrom(1,0,b,0,0,b.getNumSamples());
+    delayDryInput(b,true);
 }
 const std::vector<GuitarProcessor::Preset>& GuitarProcessor::presets() {
     static const std::vector<Preset> p={

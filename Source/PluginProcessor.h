@@ -9,10 +9,15 @@ public:
     std::atomic<float> inMeter{0},outMeter{0};
     std::array<std::atomic<float>,2> inputChannels{}, outputChannels{};
     static juce::AudioProcessorValueTreeState::ParameterLayout layout();
-    void prepareToPlay(double sr,int) override { engine.prepare(sr); }
+    void prepareToPlay(double sr,int) override {
+        engine.prepare(sr); setLatencySamples(engine.latencySamples());
+        for(auto& channel:bypassDelay)channel.assign(static_cast<size_t>(getLatencySamples()),0.f);
+        bypassHead=0;
+    }
     void releaseResources() override {}
     bool isBusesLayoutSupported(const BusesLayout&) const override;
     void processBlock(juce::AudioBuffer<float>&,juce::MidiBuffer&) override;
+    void processBlockBypassed(juce::AudioBuffer<float>&,juce::MidiBuffer&) override;
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
     const juce::String getName() const override { return "Guitar Rack"; }
@@ -32,5 +37,12 @@ public:
     };
     static const std::vector<Preset>& presets();
 private:
+    std::array<std::vector<float>,2> bypassDelay;
+    size_t bypassHead=0;
+    void delayDryInput(juce::AudioBuffer<float>&,bool replaceOutput);
+    std::array<std::atomic<float>*,8> faderParameters{};
+    std::array<std::atomic<float>*,6> colorParameters{}, enabledParameters{};
+    std::atomic<float>* ampParameter=nullptr;
+    std::atomic<float>* reampParameter=nullptr;
     int program=0;
 };

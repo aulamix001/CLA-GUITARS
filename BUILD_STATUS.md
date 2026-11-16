@@ -1,5 +1,11 @@
 # Estado da compilação
 
+## Revisão local de Pitch e interface — 16/11/2026
+
+Release Linux x86_64: VST3 e Standalone compilados; quatro suítes CTest passaram; pluginval 1.0.4 nível 10 passou. Windows/Studio One desta revisão ainda não executados. O workflow prepara MSVC 2022, testes e pluginval antes do ZIP/release por tags. Métricas, mudanças e limitações: [relatório](docs/VALIDATION-PITCH-UI.md).
+
+## Evidência histórica anterior às mudanças desta revisão
+
 - Windows x64 Release VST3: **compilado com sucesso no MSVC**.
 - Commit compilado: `3fb8e01`.
 - Testes DSP no Windows: passaram.
