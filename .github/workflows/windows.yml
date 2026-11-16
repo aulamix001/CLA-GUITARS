@@ -9,11 +9,18 @@ permissions:
   contents: read
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v5
       - name: Configure MSVC x64 Release
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=ON -DBUILD_UI_PREVIEW=ON
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=ON -DBUILD_UI_PREVIEW=ON 2>&1 | Tee-Object -FilePath configure.log
+          $result = $LASTEXITCODE
+          if ($result -ne 0) {
+            Get-Content configure.log | ForEach-Object { Write-Output "::error::$_" }
+            exit $result
+          }
       - name: Build plugin and tests
         run: cmake --build build --config Release --parallel 2
       - name: Test DSP, pitch, presets and editor
