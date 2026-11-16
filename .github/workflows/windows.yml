@@ -1,0 +1,32 @@
+name: Windows x64 VST3
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure MSVC x64
+        run: cmake -S . -B build -A x64 -DBUILD_TESTING=ON
+      - name: Build plugin and tests
+        run: cmake --build build --config Release --parallel 2
+      - name: Test DSP
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Package Windows VST3
+        shell: pwsh
+        run: |
+          $plugin = 'build/CLAInspiredGuitar_artefacts/Release/VST3/Guitar Rack.vst3'
+          if (!(Test-Path "$plugin/Contents/x86_64-win/Guitar Rack.vst3")) {
+            throw 'Windows x64 VST3 binary missing'
+          }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path $plugin -DestinationPath 'dist/Guitar-Rack-Windows-x64-VST3.zip'
+          Get-FileHash 'dist/Guitar-Rack-Windows-x64-VST3.zip' -Algorithm SHA256 | Format-List
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Guitar-Rack-Windows-x64-VST3
+          path: dist/Guitar-Rack-Windows-x64-VST3.zip
+          if-no-files-found: error
