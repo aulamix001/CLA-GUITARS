@@ -1,6 +1,6 @@
 # Guitar Rack — C++ / JUCE VST3
 
-Plugin independente para guitarra, inspirado no fluxo de controles das referências fornecidas. Alvo: **Windows 10/11 x64, VST3**. Não é um produto Waves, não inclui seus binários, marcas gráficas ou presets oficiais e não reproduz comprovadamente seus algoritmos.
+Plugin independente para guitarra, inspirado no fluxo de controles das referências fornecidas. Alvo: **Windows 10/11 x64, VST3**. Não é um produto Waves, não inclui seus binários ou presets oficiais e não reproduz comprovadamente seus algoritmos. A interface é uma recriação desenhada em JUCE a partir das referências fornecidas.
 
 ## Compilar no Windows
 
@@ -20,7 +20,7 @@ O workflow `.github/workflows/windows.yml` compila com MSVC x64, executa testes 
 
 ## Controles e presets
 
-Input/Output e seis faders: −10 a +10. Re-Amplify: on/off; Clean, Crunch, Heavy, Bypass. Clique nos botões coloridos para alternar três modos; ON desativa cada módulo. Os parâmetros estão expostos à automação da DAW. Os medidores exibem picos de entrada/saída e o LED de sensibilidade sinaliza o nível.
+Input/Output e seis faders: −10 a +10. Re-Amplify: on/off; Clean, Crunch, Heavy, Bypass. Clique nos botões coloridos para alternar três modos; O menu ▾ ativa/desativa cada módulo. Os parâmetros estão expostos à automação da DAW. Os medidores exibem picos de entrada/saída e o LED de sensibilidade sinaliza o nível.
 
 Load contém 18 presets originais em Acoustic, Clean, Crunch, Heavy, Lead / Solo e FX / Special. A seleção atualiza todos os controles públicos, sem parâmetros sonoros ocultos. Input/Output são zerados e os seis módulos ativados. Save grava XML, Load user preset recupera XML. O estado completo é salvo na sessão da DAW. Não há presets atribuídos a artistas convidados sem valores oficiais fornecidos.
 
@@ -28,7 +28,7 @@ Load contém 18 presets originais em Acoustic, Clean, Crunch, Heavy, Lead / Solo
 
 Re-Amplify usa saturação tanh e filtro de gabinete simples; Bass/Treble usam shelves; Compress usa envelope e ganho dependente do nível; Reverb usa quatro combs por canal; Delay usa taps e feedback filtrado; Pitch usa dois taps modulados com crossfade. As cores selecionam frequências, razão, tamanho ou tap conforme o módulo. Não há modelo de amplificador medido, IR de gabinete, oversampling, sincronismo de tempo da DAW ou pitch shifter de qualidade comercial.
 
-As páginas do manual vieram em imagens de baixa resolução. Nomes/valores que precisam de confirmação: especialmente os três modos de Delay/Pitch, frequências, tempos, regras exatas do LED e valores padrão. Os valores internos são **aproximações próprias**, não especificações extraídas do original. A interface é desenhada em vetores com tecido procedural, metal, sombras e faders móveis; não é cópia pixel a pixel. Não existe processamento de áudio dentro das imagens geradas anteriormente.
+As páginas do manual vieram em imagens de baixa resolução. Os nomes de Delay (Quarter / Edge / Eight) e as posições iniciais seguem a descrição visual fornecida pelo usuário. Frequências, tempos e regras exatas do LED ainda não foram confirmados em especificações técnicas do fabricante. Os valores internos são **aproximações próprias**, não especificações extraídas do original. A interface é desenhada em vetores com tecido procedural, metal, sombras e faders móveis; não é cópia pixel a pixel. Não existe processamento de áudio dentro das imagens geradas anteriormente.
 
 ## Validação
 
@@ -41,3 +41,21 @@ ctest --test-dir build-dsp --output-on-failure
 ```
 
 Testa bypass unitário, medidores, estabilidade dos efeitos/cores, cauda do delay e ganho de saída a 44.1, 48 e 96 kHz. O VST3 Windows x64 foi compilado com MSVC no GitHub Actions, e os testes DSP, empacotamento e upload passaram. [Baixe o artefato Guitar-Rack-Windows-x64-VST3](https://github.com/aulamix001/CLA-GUITARS/actions/runs/43795023814#artifacts) (login no GitHub necessário). O download contém o ZIP com a pasta VST3 completa. A compilação Linux também passou. Ainda são necessários testes manuais em DAW, automação, salvar/reabrir sessão, mono→estéreo, presets, redimensionamento e audição. Consulte `BUILD_STATUS.md` para o commit e a execução validados.
+
+## Interface de referência e acabamento vintage
+
+![Interface renderizada pelo plugin](docs/interface.png)
+
+A captura foi gerada pelo editor real de JUCE a 1120 × 720; os níveis dos medidores foram injetados pelo teste de renderização. O editor mantém a proporção durante redimensionamento, com tecido marrom/dourado, chave metálica iluminada, knob de borda serrilhada, oito faders prateados escovados e sombras laterais. Seletores Color e valores iniciais seguem a descrição visual do usuário. A aparência foi recriada; não é comprovadamente idêntica pixel a pixel ao original.
+
+A/B alterna dois estados; ▾ copia o estado ao outro slot, restaura os ajustes de referência e ativa/desativa módulos. Undo/Redo restaura parâmetros. Histórico e slots A/B vivem durante a sessão do editor; o estado de áudio ativo continua sendo salvo pela DAW. Os medidores L/R usam picos independentes de cada canal. Nenhum efeito de áudio foi substituído por uma imagem estática.
+
+Para reproduzir a captura e os testes de interação no Linux:
+
+```sh
+cmake -S . -B build-ui -DJUCE_PATH=/caminho/para/JUCE -DBUILD_UI_PREVIEW=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build-ui --target RackPreview
+./build-ui/RackPreview_artefacts/Release/RackPreview /tmp/guitar-rack-ui.png
+```
+
+O teste exercita Color, Undo, Redo e troca/restauração A/B antes de renderizar o editor.

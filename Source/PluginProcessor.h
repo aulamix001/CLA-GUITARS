@@ -7,6 +7,7 @@ public:
     juce::AudioProcessorValueTreeState state;
     guitar::Engine engine;
     std::atomic<float> inMeter{0},outMeter{0};
+    std::array<std::atomic<float>,2> inputChannels{}, outputChannels{};
     static juce::AudioProcessorValueTreeState::ParameterLayout layout();
     void prepareToPlay(double sr,int) override { engine.prepare(sr); }
     void releaseResources() override {}

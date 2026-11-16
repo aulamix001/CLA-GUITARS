@@ -3,15 +3,17 @@
 namespace { const char* ids[]={"bass","treble","compress","reverb","delay","pitch"}; }
 juce::AudioProcessorValueTreeState::ParameterLayout GuitarProcessor::layout() {
     juce::AudioProcessorValueTreeState::ParameterLayout l;
-    for(auto id:{"input","output"}) l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,-10.f,10.f,0.f));
-    const juce::StringArray colors[]={{"Upper","Lower","Sub"},{"Roof","Top","Bite"},{"Wall","Spank","Push"},{"Arena","Hall","Club"},{"Quarter","Eight","Slap"},{"Spreader","Wide","Stereo"}};
+    for(auto id:{"input","output"}) l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,-10.f,10.f,juce::String(id)=="input"?1.f:2.f));
+    const juce::StringArray colors[]={{"Upper","Lower","Sub"},{"Roof","Top","Bite"},{"Wall","Spank","Push"},{"Arena","Hall","Club"},{"Quarter","Edge","Eight"},{"Spreader","Wide","Stereo"}};
+    const float defaults[]={-4,4,1.5f,-4,4,-6};
+    const int defaultColors[]={1,2,1,0,1,2};
     for(int i=0;i<6;++i) {
         juce::String id=ids[i];
-        l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,-10.f,10.f,0.f));
-        l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{id+"Color",1},id+" Color",colors[i],0));
+        l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,-10.f,10.f,defaults[i]));
+        l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{id+"Color",1},id+" Color",colors[i],defaultColors[i]));
         l.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{id+"On",1},id+" On",true));
     }
-    l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"amp",1},"Amp",juce::StringArray{"Clean","Crunch","Heavy","Bypass"},0));
+    l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"amp",1},"Amp",juce::StringArray{"Clean","Crunch","Heavy","Bypass"},2));
     l.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"reamp",1},"Re-Amplify",true));
     return l;
 }
@@ -26,7 +28,9 @@ void GuitarProcessor::processBlock(juce::AudioBuffer<float>& b,juce::MidiBuffer&
     guitar::Settings s; s.input=value("input");s.output=value("output");s.reamp=value("reamp")>0.5f;s.amp=(int)value("amp");
     float* f[]={&s.bass,&s.treble,&s.compress,&s.reverb,&s.delay,&s.pitch};
     for(int i=0;i<6;++i){*f[i]=value(ids[i]);s.color[i]=(int)value(juce::String(ids[i])+"Color");s.enabled[i]=value(juce::String(ids[i])+"On")>0.5f;}
+    for(int c=0;c<2;++c)inputChannels[(size_t)c].store(b.getMagnitude(c,0,b.getNumSamples())*guitar::gain(s.input));
     engine.set(s);engine.process(b.getWritePointer(0),b.getWritePointer(1),b.getNumSamples());
+    for(int c=0;c<2;++c)outputChannels[(size_t)c].store(b.getMagnitude(c,0,b.getNumSamples()));
     inMeter.store(engine.inputPeak);outMeter.store(engine.outputPeak);
 }
 const std::vector<GuitarProcessor::Preset>& GuitarProcessor::presets() {
