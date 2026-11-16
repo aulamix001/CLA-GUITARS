@@ -5,9 +5,56 @@
 #include <map>
 #include <set>
 
+struct TestTempo : juce::AudioPlayHead {
+    double bpm=90;
+    juce::Optional<PositionInfo> getPosition() const override {
+        PositionInfo position;position.setBpm(bpm);return position;
+    }
+};
+static void testHostTempo() {
+    GuitarProcessor processor;
+    TestTempo tempo;processor.setPlayHead(&tempo);
+    for(auto key:{"bassOn","trebleOn","compressOn","reverbOn","pitchOn"})
+        processor.state.getParameter(key)->setValueNotifyingHost(0);
+    processor.state.getParameter("delayColor")->setValueNotifyingHost(1); // Eight
+    for(double bpm:{90.,180.}) {
+        tempo.bpm=bpm;processor.prepareToPlay(48000,256);
+        int onset=processor.getLatencySamples()+(int)std::floor(24000*60/bpm);
+        juce::AudioBuffer<float> audio(2,onset+8);audio.clear();audio.setSample(0,0,.5f);audio.setSample(1,0,.5f);
+        juce::MidiBuffer midi;processor.processBlock(audio,midi);
+        double energy=0;for(int n=onset;n<onset+3;++n)energy+=std::abs(audio.getSample(0,n));
+        if(energy<.001)throw std::runtime_error("Host BPM did not reach delay processing");
+        for(int n=processor.getLatencySamples()+1;n<onset-1;++n)
+            if(std::abs(audio.getSample(0,n))>1e-6f)throw std::runtime_error("Host-synced delay arrived too early");
+    }
+    processor.setPlayHead(nullptr);
+}
 static void testFactoryBank(const juce::File& exportDirectory) {
+    testHostTempo();
     GuitarProcessor processor, restored;
     if(processor.getNumPrograms()!=60)throw std::runtime_error("Factory bank must contain exactly 60 programs");
+    // Manual p.8-13 and supplied Parameter_List: neutral startup, .1 steps,
+    // green first colors, independent On switches, stable legacy parameter IDs.
+    for(auto key:{"input","output","bass","treble","compress","reverb","delay","pitch","balance"}) {
+        auto* parameter=processor.state.getParameter(key);
+        if(!parameter||std::abs(parameter->convertFrom0to1(parameter->getDefaultValue()))>1e-5f)
+            throw std::runtime_error("Startup faders must be neutral");
+        if(std::abs(parameter->getNormalisableRange().interval-.1f)>1e-5f)
+            throw std::runtime_error("Fader resolution must be .1");
+    }
+    if(processor.state.getRawParameterValue("amp")->load()!=0||processor.state.getRawParameterValue("reamp")->load()!=0)
+        throw std::runtime_error("Startup must be Clean with Re-Amplify off");
+    for(auto key:{"bassColor","trebleColor","compressColor","reverbColor","delayColor","pitchColor"})
+        if(processor.state.getRawParameterValue(key)->load()!=2)
+            throw std::runtime_error("Startup colors must be green");
+    auto* balance=processor.state.getParameter("balance");
+    if(balance->getNormalisableRange().start!=-6||balance->getNormalisableRange().end!=6)
+        throw std::runtime_error("Balance range must be +/-6");
+    balance->setValueNotifyingHost(balance->convertTo0to1(4.2f));
+    juce::MemoryBlock balanced;processor.getStateInformation(balanced);restored.setStateInformation(balanced.getData(),(int)balanced.getSize());
+    if(std::abs(restored.state.getRawParameterValue("balance")->load()-4.2f)>1e-5f)
+        throw std::runtime_error("Balance must survive session recall");
+    balance->setValueNotifyingHost(balance->convertTo0to1(0));
     std::set<juce::String> names;
     std::map<juce::String,int> folders;
     juce::String csv="Category,Name,Amp,ReAmplify,Input,Output,Bass,Treble,Compress,Reverb,Delay,Pitch,BassColor,TrebleColor,CompressColor,ReverbColor,DelayColor,PitchColor,BassOn,TrebleOn,CompressOn,ReverbOn,DelayOn,PitchOn\n";

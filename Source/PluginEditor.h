@@ -41,6 +41,8 @@ public:
 private:
     struct Canvas : juce::Component {
         std::function<void(juce::Graphics&)> draw;
+        std::function<void(juce::Point<int>)> clicked;
+        void mouseDown(const juce::MouseEvent& e) override { if(clicked) clicked(e.getPosition()); }
         void paint(juce::Graphics& g) override { if (draw) draw(g); }
     } canvas;
     GuitarProcessor& processor;
@@ -50,7 +52,7 @@ private:
     std::array<juce::TextButton, 6> colorSelectors;
     std::array<std::unique_ptr<juce::ParameterAttachment>,6> moduleIndicators;
     MetalToggle reamp;
-    juce::Slider amp;
+    juce::Slider amp, balance;
     juce::TextButton undo{"↶"}, redo{"↷"}, compare{"A → B"}, load{"Load"}, save{"Save"},
                      options{"▾"}, help{"?"};
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> attachments;

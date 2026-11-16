@@ -26,7 +26,7 @@ Load contém 60 presets originais (10 por categoria) em Acoustic, Clean, Crunch,
 
 ## Implementação e limites de fidelidade
 
-Re-Amplify usa saturação tanh e filtro de gabinete simples; Bass/Treble usam shelves; Compress usa envelope e ganho dependente do nível; Reverb usa quatro combs por canal; Delay usa taps e feedback filtrado; Pitch usa Signalsmith Stretch 1.3.2 (MIT), com análise espectral estéreo, ligação de fase entre canais, precisão interna double e sobreposição de janelas de 120 ms a cada 5 ms. O fader continua sendo nível do detune em dB, não semitons, preservando IDs e valores dos presets. Spreader/Wide/Stereo mantêm razões 0,975/0,95/0,9; a transposição é suavizada em 30 ms e o nível em aproximadamente 10 ms. Há 120 ms de latência fixa, informada ao host e compensada nos caminhos seco e bypass. Essa latência é uma limitação importante para tocar ao vivo. As cores selecionam frequências, razão, tamanho ou tap conforme o módulo. Não há modelo de amplificador medido, IR de gabinete, oversampling, sincronismo de tempo da DAW ou pitch shifter de qualidade comercial.
+Re-Amplify usa saturação tanh e filtro de gabinete simples; Bass/Treble usam shelves; Compress usa envelope e ganho dependente do nível; Reverb usa quatro combs por canal; Delay usa taps e feedback filtrado; Pitch usa Signalsmith Stretch 1.3.2 (MIT), com análise espectral estéreo, ligação de fase entre canais, precisão interna double e sobreposição de janelas de 120 ms a cada 5 ms. O fader continua sendo nível do detune em dB, não semitons, preservando IDs e valores dos presets. Spreader/Wide/Stereo mantêm razões 0,975/0,95/0,9; a transposição é suavizada em 30 ms e o nível em aproximadamente 10 ms. Há 120 ms de latência fixa, informada ao host e compensada nos caminhos seco e bypass. Essa latência é uma limitação importante para tocar ao vivo. As cores selecionam frequências, razão, tamanho ou tap conforme o módulo. Não há modelo de amplificador medido, IR de gabinete, oversampling ou validação comercial do pitch shifter. O Delay acompanha o BPM da DAW conforme a seção de ajustes abaixo.
 
 As páginas do manual vieram em imagens de baixa resolução. Os nomes de Delay (Quarter / Edge / Eight) e as posições iniciais seguem a descrição visual fornecida pelo usuário. Frequências, tempos e regras exatas do LED ainda não foram confirmados em especificações técnicas do fabricante. Os valores internos são **aproximações próprias**, não especificações extraídas do original. A interface é desenhada em vetores com tecido procedural, metal, sombras e faders móveis; não é cópia pixel a pixel. Não existe processamento de áudio dentro das imagens geradas anteriormente.
 
@@ -75,3 +75,42 @@ Cada categoria contém 10 presets originais. O menu Load aplica automaticamente 
 Não há parâmetros de efeito ocultos, efeitos novos ou cópia de presets oficiais. Os novos nomes são sugestões de uso; a resposta depende do sinal de entrada e ainda não houve audição comparativa em DAW. O modo Pitch é o detune/doubling já implementado, sem mudança de oitava.
 
 `preset_tests` carrega todos os 60 programas, verifica as seis categorias com 10 itens, mapeamento dos controles, limites, restauração de sessão e estabilidade do processamento estéreo. Esse teste é executado por CTest tanto no Linux quanto no workflow Windows. Para reexportar os XMLs e a tabela a partir do banco C++: `preset_tests /caminho/absoluto/Presets`.
+
+## Ajustes a partir do manual e XMLs fornecidos
+
+Os parâmetros agora iniciam com faders em 0 (passos de 0,1), Clean,
+Re-Amplify desligado e as seis cores verdes: Sub, Bite, Push, Club, Eight e
+Stereo. O reset do menu e o duplo clique dos faders usam esses valores.
+Os IDs, a ordem dos parâmetros anteriores e os 60 presets próprios foram
+preservados. Sessões antigas continuam carregando seus valores salvos.
+
+Balance foi acrescentado ao fim da lista de automação: −6 a +6 dB em passos
+de 0,1, centro 0; valores negativos atenuam R e positivos atenuam L. O controle
+aparece na configuração estéreo e é ignorado no processamento mono→estéreo.
+Os medidores mostram −26 a 0 dBFS; clip acima de 0 dBFS permanece indicado
+até clicar no respectivo medidor.
+
+Delay lê o BPM da DAW: Eight = 1/8, Edge = 1/8 pontuada e Quarter = 1/4.
+Sem BPM válido, usa 120 BPM. O tempo máximo de eco é 2 segundos; andamentos
+muito baixos são limitados a essa capacidade. O delay agora é sincronizado
+nos dois canais. Isso altera a resposta temporal de presets/sessões anteriores.
+
+Para converter os controles públicos de um banco XML fornecido, usando seu
+arquivo de definição de parâmetros correspondente:
+
+```sh
+python3 scripts/convert-cla-presets.py /caminho/Parameter_List.xml /caminho/banco.xml /caminho/saida-vazia
+python3 -m unittest discover -s tests -p 'test_*.py'
+```
+
+Abra cada XML convertido em **Load → Load user preset…**. A conversão mantém
+Sensitivity/Output atuais, conforme `IgnoreOnPresetLoad`, e converte Clear,
+Green, Blue e Red para os estados On/Off e Color existentes. `*` mantém o
+controle atual. O diretório de saída precisa estar vazio. Bancos internos de
+modos/cores sem vetor público correspondente não são convertidos.
+
+O manual descreve controles; os XMLs também incluem metadados, gráficos e
+presets internos. Eles não fornecem os algoritmos proprietários. A transferência
+de valores não reproduz a sonoridade do produto de referência. Frequências de
+EQ, compressão, gabinete, detune, comportamento do LED e efeitos continuam
+sendo implementações próprias; a latência de Pitch permanece em 120 ms.

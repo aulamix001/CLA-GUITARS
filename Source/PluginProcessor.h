@@ -7,6 +7,7 @@ public:
     juce::AudioProcessorValueTreeState state;
     guitar::Engine engine;
     std::atomic<float> inMeter{0},outMeter{0};
+    std::atomic<bool> inputClipped{false},outputClipped{false};
     std::array<std::atomic<float>,2> inputChannels{}, outputChannels{};
     static juce::AudioProcessorValueTreeState::ParameterLayout layout();
     void prepareToPlay(double sr,int) override {
@@ -42,6 +43,7 @@ private:
     void delayDryInput(juce::AudioBuffer<float>&,bool replaceOutput);
     std::array<std::atomic<float>*,8> faderParameters{};
     std::array<std::atomic<float>*,6> colorParameters{}, enabledParameters{};
+    std::atomic<float>* balanceParameter=nullptr;
     std::atomic<float>* ampParameter=nullptr;
     std::atomic<float>* reampParameter=nullptr;
     int program=0;

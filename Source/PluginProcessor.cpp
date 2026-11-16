@@ -25,24 +25,27 @@ public:
 const char* ids[]={"bass","treble","compress","reverb","delay","pitch"}; }
 juce::AudioProcessorValueTreeState::ParameterLayout GuitarProcessor::layout() {
     juce::AudioProcessorValueTreeState::ParameterLayout l;
-    for(auto id:{"input","output"}) l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,-10.f,10.f,juce::String(id)=="input"?1.f:2.f));
+    for(auto id:{"input","output"}) l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,juce::NormalisableRange<float>{-10.f,10.f,0.1f},0.f));
     const juce::StringArray colors[]={{"Upper","Lower","Sub"},{"Roof","Top","Bite"},{"Wall","Spank","Push"},{"Arena","Hall","Club"},{"Quarter","Edge","Eight"},{"Spreader","Wide","Stereo"}};
-    const float defaults[]={-4,4,1.5f,-4,4,-6};
-    const int defaultColors[]={1,2,1,0,1,2};
+    const float defaults[]={0,0,0,0,0,0};
+    const int defaultColors[]={2,2,2,2,2,2};
     for(int i=0;i<6;++i) {
         juce::String id=ids[i];
-        l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,-10.f,10.f,defaults[i]));
+        l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},id,juce::NormalisableRange<float>{-10.f,10.f,0.1f},defaults[i]));
         l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{id+"Color",1},id+" Color",colors[i],defaultColors[i]));
         l.add(std::make_unique<SwitchParameter>(juce::ParameterID{id+"On",1},id+" On",true));
     }
-    l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"amp",1},"Amp",juce::StringArray{"Clean","Crunch","Heavy","Bypass"},2));
-    l.add(std::make_unique<SwitchParameter>(juce::ParameterID{"reamp",1},"Re-Amplify",true));
+    l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"amp",1},"Amp",juce::StringArray{"Clean","Crunch","Heavy","Bypass"},0));
+    l.add(std::make_unique<SwitchParameter>(juce::ParameterID{"reamp",1},"Re-Amplify",false));
+    // Append new parameters to preserve the existing host parameter order.
+    l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"balance",1},"Balance",juce::NormalisableRange<float>{-6.f,6.f,0.1f},0.f));
     return l;
 }
 GuitarProcessor::GuitarProcessor():AudioProcessor(BusesProperties().withInput("Input",juce::AudioChannelSet::stereo(),true).withOutput("Output",juce::AudioChannelSet::stereo(),true)),state(*this,nullptr,"GuitarRack",layout()) {
     const char* faders[]={"input","bass","treble","compress","reverb","delay","pitch","output"};
     for(size_t i=0;i<8;++i)faderParameters[i]=state.getRawParameterValue(faders[i]);
     for(size_t i=0;i<6;++i){colorParameters[i]=state.getRawParameterValue(juce::String(ids[i])+"Color");enabledParameters[i]=state.getRawParameterValue(juce::String(ids[i])+"On");}
+    balanceParameter=state.getRawParameterValue("balance");
     ampParameter=state.getRawParameterValue("amp");reampParameter=state.getRawParameterValue("reamp");
 }
 bool GuitarProcessor::isBusesLayoutSupported(const BusesLayout& l) const {
@@ -53,12 +56,18 @@ void GuitarProcessor::processBlock(juce::AudioBuffer<float>& b,juce::MidiBuffer&
     if(getTotalNumInputChannels()==1) b.copyFrom(1,0,b,0,0,b.getNumSamples());
     delayDryInput(b,false);
     guitar::Settings s;s.input=faderParameters[0]->load();s.output=faderParameters[7]->load();s.reamp=reampParameter->load()>.5f;s.amp=(int)ampParameter->load();
+    s.balance=getTotalNumInputChannels()==2?balanceParameter->load():0.f;
+    if(auto* playHead=getPlayHead())
+        if(auto position=playHead->getPosition())
+            if(auto bpm=position->getBpm()) s.bpm=*bpm;
     float* f[]={&s.bass,&s.treble,&s.compress,&s.reverb,&s.delay,&s.pitch};
     for(size_t i=0;i<6;++i){*f[i]=faderParameters[i+1]->load();s.color[i]=(int)colorParameters[i]->load();s.enabled[i]=enabledParameters[i]->load()>.5f;}
     for(int c=0;c<2;++c)inputChannels[(size_t)c].store(b.getMagnitude(c,0,b.getNumSamples())*guitar::gain(s.input));
     engine.set(s);engine.process(b.getWritePointer(0),b.getWritePointer(1),b.getNumSamples());
     for(int c=0;c<2;++c)outputChannels[(size_t)c].store(b.getMagnitude(c,0,b.getNumSamples()));
     inMeter.store(engine.inputPeak);outMeter.store(engine.outputPeak);
+    if(engine.inputPeak>1.f)inputClipped=true;
+    if(engine.outputPeak>1.f)outputClipped=true;
 }
 void GuitarProcessor::delayDryInput(juce::AudioBuffer<float>& b,bool replaceOutput) {
     if(bypassDelay[0].empty())return;

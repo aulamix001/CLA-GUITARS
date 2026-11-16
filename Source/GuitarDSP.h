@@ -10,9 +10,11 @@ constexpr float pi = 3.14159265358979323846f;
 inline float gain(float db) { return std::pow(10.0f, db / 20.0f); }
 struct Settings {
     float input = 0, output = 0, bass = 0, treble = 0, compress = 0, reverb = 0, delay = 0, pitch = 0;
-    bool reamp = true;
+    float balance = 0;
+    double bpm = 120; // Deterministic fallback when the host supplies no tempo.
+    bool reamp = false;
     int amp = 0; // Clean, Crunch, Heavy, Bypass
-    std::array<int, 6> color {0, 0, 0, 0, 0, 0};
+    std::array<int, 6> color {2, 2, 2, 2, 2, 2};
     std::array<bool, 6> enabled {true, true, true, true, true, true};
 };
 struct Biquad {
@@ -67,6 +69,13 @@ public:
         }
     }
     int latencySamples() const { return pitchShifter.latencySamples(); }
+    static float delaySeconds(int color,double bpm) {
+        if(!std::isfinite(bpm)||bpm<=0) bpm=120;
+        // Quarter, dotted eighth (Edge), eighth. Bound extreme host tempos
+        // to the preallocated delay capacity without allocating in process().
+        constexpr double beats[]={1.0,0.75,0.5};
+        return static_cast<float>(std::clamp(60.0/bpm*beats[std::clamp(color,0,2)],1.0/48000.0,2.0));
+    }
     void set(const Settings& s) { target=s; }
     void process(float* left,float* right,int count) {
         inputPeak=outputPeak=0;
@@ -74,6 +83,7 @@ public:
             // Smooth continuously automated gains and amounts over about 10 ms.
             float a=smoothing;
             auto smooth=[a](float& x,float t){x+=a*(t-x);};
+            smooth(current.balance,target.balance);
             smooth(current.input,target.input); smooth(current.output,target.output);
             smooth(current.bass,target.bass); smooth(current.treble,target.treble); smooth(current.compress,target.compress);
             smooth(current.reverb,target.reverb); smooth(current.delay,target.delay); smooth(current.pitch,target.pitch);
@@ -103,9 +113,7 @@ public:
                     float over=std::max(0.0f,20*std::log10(std::max(env[c],1e-8f))-threshold);
                     x*=gain(-over*(1-1/ratio)+amount*4);
                 }
-                constexpr float times[]={0.25f,0.125f,0.0625f};
-                float delayMs=times[std::clamp(target.color[4],0,2)]*(c?1.012f:1);
-                float echo=echoes[c].read(delayMs*static_cast<float>(sr));
+                float echo=echoes[c].read(delaySeconds(target.color[4],target.bpm)*static_cast<float>(sr));
                 echoTone[c]+=0.25f*(echo-echoTone[c]);
                 echoes[c].push(x+(target.enabled[4]?echoTone[c]*0.32f:0));
                 if(target.enabled[4]) x+=echo*gain(current.delay)*0.18f;
@@ -126,7 +134,8 @@ public:
             pitchShifter.process(beforePitch,12.0*std::log2(ratios[std::clamp(target.color[5],0,2)]),wet,dry);
             smooth(pitchMix,target.enabled[5]?gain(current.pitch)*0.18f:0.f);
             for(int c=0;c<2;++c) {
-                float x=(dry[static_cast<size_t>(c)]+wet[static_cast<size_t>(c)]*pitchMix)*gain(current.output);
+                float balanceDb=c==0?-std::max(0.f,current.balance):std::min(0.f,current.balance);
+                float x=(dry[static_cast<size_t>(c)]+wet[static_cast<size_t>(c)]*pitchMix)*gain(current.output+balanceDb);
                 if(!std::isfinite(x))x=0;
                 outputPeak=std::max(outputPeak,std::abs(x));
                 (c?right:left)[i]=x;

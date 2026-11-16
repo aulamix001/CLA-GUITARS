@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(CLAInspiredGuitar VERSION 0.1.0 LANGUAGES C CXX)
+project(CLAInspiredGuitar VERSION 0.2.2 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 option(BUILD_PLUGIN "Build JUCE VST3 and standalone" ON)
 include(CTest)

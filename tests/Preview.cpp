@@ -30,6 +30,24 @@ int main(int argc,char** argv){juce::ScopedJuceInitialiser_GUI init;try{
     testFactoryBank({});
     GuitarProcessor processor;processor.prepareToPlay(48000,256);
     std::unique_ptr<juce::AudioProcessorEditor> editor(processor.createEditor());
+    std::vector<juce::Component*> balanceControls;collect(*editor,"balance",balanceControls);
+    require(balanceControls.size()==1,"Stereo balance control missing");
+    auto* balanceControl=dynamic_cast<juce::Slider*>(balanceControls[0]);
+    require(balanceControl,"Balance control must be a slider");
+    balanceControl->setValue(3.5,juce::sendNotificationSync);
+    require(std::abs(processor.state.getRawParameterValue("balance")->load()-3.5f)<1e-5f,"Balance UI did not reach audio parameter");
+    processor.state.getParameter("balance")->setValueNotifyingHost(.5f);
+    require(std::abs(balanceControl->getValue())<1e-5,"Balance automation did not reach UI");
+    std::vector<juce::Component*> canvases;collect(*editor,"rack-canvas",canvases);
+    require(canvases.size()==1,"Canvas missing");
+    processor.inputClipped=true;processor.outputClipped=true;
+    auto clickMeter=[&](float x){
+        auto now=juce::Time::getCurrentTime();juce::Point<float> pos{x,400};
+        juce::MouseEvent event(juce::Desktop::getInstance().getMainMouseSource(),pos,juce::ModifierKeys::leftButtonModifier,1,0,0,0,0,canvases[0],canvases[0],now,pos,now,1,false);
+        canvases[0]->mouseDown(event);
+    };
+    clickMeter(200);require(!processor.inputClipped.load()&&processor.outputClipped.load(),"Input clip reset must be independent");
+    clickMeter(900);require(!processor.outputClipped.load(),"Output clip reset failed");
     std::vector<juce::Component*> arrows,selectors;
     collect(*editor,"arrow",arrows);collect(*editor,"color-selector",selectors);
     require(arrows.size()==6&&selectors.size()==6,"Six module controls required");
@@ -84,7 +102,7 @@ int main(int argc,char** argv){juce::ScopedJuceInitialiser_GUI init;try{
     auto pos=slider->getLocalBounds().toFloat().getCentre();auto now=juce::Time::getCurrentTime();
     juce::MouseEvent doubleClick(juce::Desktop::getInstance().getMainMouseSource(),pos,{},1,0,0,0,0,slider,slider,now,pos,now,2,false);
     slider->mouseDoubleClick(doubleClick);
-    require(slider->getValue()==-6,"Pitch double-click did not restore its actual default");
+    require(slider->getValue()==0,"Pitch double-click did not restore its actual default");
     // History and comparison still work after mode cycling.
     processor.setCurrentProgram(0);click(*arrows[0]);float edited=processor.state.getRawParameterValue("bassColor")->load();
     auto* undo=button(*editor,"↶");auto* redo=button(*editor,"↷");require(undo&&redo,"History buttons missing");
@@ -95,8 +113,9 @@ int main(int argc,char** argv){juce::ScopedJuceInitialiser_GUI init;try{
     std::vector<juce::Component*> switches;collect(*editor,"reamp-switch",switches);
     require(switches.size()==1,"Re-Amplify switch missing");
     auto* toggle=dynamic_cast<juce::ToggleButton*>(switches[0]);require(toggle,"Switch is not a ToggleButton");
-    click(*toggle);require(processor.state.getRawParameterValue("reamp")->load()==0,"Switch click did not turn off audio parameter");
     click(*toggle);require(processor.state.getRawParameterValue("reamp")->load()==1,"Switch click did not turn on audio parameter");
+    click(*toggle);require(processor.state.getRawParameterValue("reamp")->load()==0,"Switch click did not turn off audio parameter");
+    click(*toggle);
     processor.inputChannels[0]=.28f;processor.inputChannels[1]=.25f;processor.outputChannels[0]=.4f;processor.outputChannels[1]=.36f;processor.inMeter=.28f;processor.outMeter=.4f;
     for(int wait=0;wait<8;++wait){juce::Thread::sleep(100);juce::Timer::callPendingTimersSynchronously();}
     require(std::abs((float)toggle->getProperties()["switchPosition"]-1.f)<.001f,"ON switch animation did not settle");

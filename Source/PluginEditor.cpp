@@ -41,8 +41,12 @@ juce::Slider::SliderLayout RackLook::getSliderLayout(juce::Slider& slider) {
     }
     return juce::LookAndFeel_V4::getSliderLayout(slider);
 }
-void RackLook::drawLinearSlider(juce::Graphics& g, int, int, int, int, float sliderPos, float, float,
-                               juce::Slider::SliderStyle, juce::Slider& s) {
+void RackLook::drawLinearSlider(juce::Graphics& g, int x, int y0, int w, int h, float sliderPos, float minPos, float maxPos,
+                               juce::Slider::SliderStyle style, juce::Slider& s) {
+    if(style!=juce::Slider::LinearVertical){
+        juce::LookAndFeel_V4::drawLinearSlider(g,x,y0,w,h,sliderPos,minPos,maxPos,style,s);
+        return;
+    }
     const float cx = s.getWidth()*.5f;
     const float y = sliderPos;
     g.setColour(juce::Colour(0xff777b75).withAlpha(.34f));
@@ -190,7 +194,7 @@ void RackLook::drawToggleButton(juce::Graphics& g,juce::ToggleButton& b,bool ove
 }
 
 GuitarEditor::GuitarEditor(GuitarProcessor& p):AudioProcessorEditor(p),processor(p) {
-    setLookAndFeel(&look);addAndMakeVisible(canvas);canvas.setSize(width,height);
+    setLookAndFeel(&look);addAndMakeVisible(canvas);canvas.setSize(width,height);canvas.setComponentID("rack-canvas");
     canvas.draw=[this](juce::Graphics& g){drawPanel(g);};
     setResizable(true,true);getConstrainer()->setFixedAspectRatio(double(width)/height);
     setResizeLimits(840,540,1680,1080);setSize(width,height);
@@ -227,6 +231,19 @@ GuitarEditor::GuitarEditor(GuitarProcessor& p):AudioProcessorEditor(p),processor
         selector.onClick=[this,k]{cycleColor(k,juce::ModifierKeys::getCurrentModifiers().isShiftDown());};
     }
     canvas.addAndMakeVisible(reamp);reamp.setComponentID("reamp-switch");reamp.setTooltip("Re-Amplify ON/OFF");reampAttachment=std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(p.state,"reamp",reamp);reamp.onClick=[this]{recordChange();};
+    canvas.clicked=[this](juce::Point<int> point){
+        if(juce::Rectangle<int>(178,292,65,353).contains(point))processor.inputClipped=false;
+        if(juce::Rectangle<int>(886,292,65,353).contains(point))processor.outputClipped=false;
+    };
+    if(p.getTotalNumInputChannels()==2){
+        canvas.addAndMakeVisible(balance);balance.setComponentID("balance");
+        balance.setSliderStyle(juce::Slider::LinearHorizontal);
+        balance.setTextBoxStyle(juce::Slider::TextBoxRight,false,48,20);
+        balance.setName("Balance");balance.setTooltip("Stereo balance: -6 dB left / +6 dB right");
+        balance.setTextValueSuffix(" dB");balance.setDoubleClickReturnValue(true,0);
+        attachments.push_back(std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.state,"balance",balance));
+        balance.onDragStart=[this]{recordChange();};balance.onDragEnd=[this]{recordChange();};
+    }
     canvas.addAndMakeVisible(amp);amp.setSliderStyle(juce::Slider::RotaryVerticalDrag);amp.setTextBoxStyle(juce::Slider::NoTextBox,false,0,0);amp.setPopupDisplayEnabled(false,false,nullptr);amp.setName("Amp mode");amp.setTooltip("Clean / Crunch / Heavy / Bypass");attachments.push_back(std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.state,"amp",amp));amp.onDragStart=[this]{recordChange();};amp.onDragEnd=[this]{recordChange();};
     for(auto* b:{&undo,&redo,&compare,&load,&save,&options,&help})canvas.addAndMakeVisible(*b);
     undo.setComponentID("undo");redo.setComponentID("redo");compare.setComponentID("compare");options.setComponentID("options");
@@ -240,6 +257,7 @@ GuitarEditor::~GuitarEditor(){stopTimer();canvas.draw=nullptr;for(auto& slider:s
 void GuitarEditor::paint(juce::Graphics& g){g.fillAll(juce::Colours::black);}
 void GuitarEditor::resized(){float scale=juce::jmin(getWidth()/float(width),getHeight()/float(height));canvas.setTransform(juce::AffineTransform::scale(scale));canvas.setTopLeftPosition(0,0);
     undo.setBounds(241,3,42,21);redo.setBounds(287,3,42,21);compare.setBounds(887,3,57,21);load.setBounds(948,3,55,21);save.setBounds(1007,3,55,21);options.setBounds(1066,3,20,21);help.setBounds(1090,3,25,21);
+    balance.setBounds(157,274,111,18);
     reamp.setBounds(52,195,66,61);amp.setBounds(122,183,76,76);
     for(int i=0;i<8;++i)sliders[i].setBounds(centers[i]-32,304,64,354);
     for(int k=0;k<6;++k){colors[k].setBounds(centers[k+1]-20,249,40,40);colorSelectors[k].setBounds(centers[k+1]-43,178,86,54);}
@@ -260,8 +278,8 @@ void GuitarEditor::loadPreset(){
     chooser->launchAsync(juce::FileBrowserComponent::openMode|juce::FileBrowserComponent::canSelectFiles,[safe](const juce::FileChooser& c){if(safe==nullptr)return;if(auto xml=juce::XmlDocument::parse(c.getResult())){auto s=juce::ValueTree::fromXml(*xml);if(s.hasType(safe->processor.state.state.getType())){safe->restore(s);safe->presetTitle=c.getResult().getFileNameWithoutExtension();safe->baseline=safe->processor.state.copyState();safe->recordChange();}}});
 }
 void GuitarEditor::presetMenu(){juce::PopupMenu menu;auto& presets=GuitarProcessor::presets();for(auto folder:{"Acoustic","Clean","Crunch","Heavy","Lead / Solo","FX / Special"}){juce::PopupMenu sub;for(size_t i=0;i<presets.size();++i)if(juce::String(folder)==presets[i].folder)sub.addItem((int)i+1,presets[i].name);menu.addSubMenu(folder,sub);}menu.addSeparator();menu.addItem(1000,"Load user preset…");const juce::Component::SafePointer<GuitarEditor> safe(this);menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(load),[safe](int id){if(safe==nullptr)return;if(id>0&&id<1000){safe->processor.setCurrentProgram(id-1);safe->presetTitle=safe->processor.getProgramName(id-1);safe->baseline=safe->processor.state.copyState();safe->recordChange();}if(id==1000)safe->loadPreset();});}
-void GuitarEditor::moreOptions(){juce::PopupMenu m;m.addItem(1,"Copy current setup to the other A/B slot");m.addItem(2,"Restore reference settings");m.addSeparator();for(int k=0;k<6;++k)m.addItem(10+k,labels[k+1],true,processor.state.getRawParameterValue(juce::String(ids[k+1])+"On")->load()>.5f);const juce::Component::SafePointer<GuitarEditor> safe(this);m.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(options),[safe](int id){if(safe==nullptr)return;if(id==1)safe->comparison[(size_t)(1-safe->activeSlot)]=safe->processor.state.copyState();if(id==2){const float f[]={1,-4,4,1.5f,-4,4,-6,2};for(int i=0;i<8;++i)safe->setParameter(ids[i],f[i]);const int c[]={1,2,1,0,1,2};for(int i=0;i<6;++i){safe->setParameter(juce::String(ids[i+1])+"Color",(float)c[i]);safe->setParameter(juce::String(ids[i+1])+"On",1);}safe->setParameter("amp",2);safe->setParameter("reamp",1);}if(id>=10&&id<16){juce::String key=juce::String(ids[id-9])+"On";safe->setParameter(key,safe->processor.state.getRawParameterValue(key)->load()>.5f?0:1);}safe->recordChange();});}
-void GuitarEditor::timerCallback(){for(int c=0;c<2;++c){meterInput[(size_t)c]=juce::jmax(processor.inputChannels[(size_t)c].load(),meterInput[(size_t)c]*.86f);meterOutput[(size_t)c]=juce::jmax(processor.outputChannels[(size_t)c].load(),meterOutput[(size_t)c]*.86f);}meterIn=juce::jmax(processor.inMeter.load(),meterIn*.86f);meterOut=juce::jmax(processor.outMeter.load(),meterOut*.86f);clipIn=processor.inMeter.load()>=1?45:juce::jmax(0,clipIn-1);clipOut=processor.outMeter.load()>=1?45:juce::jmax(0,clipOut-1);undo.setEnabled(historyIndex>0);redo.setEnabled(historyIndex+1<(int)history.size());compare.setButtonText(activeSlot==0?"A → B":"B → A");canvas.repaint(0,0,1120,29);canvas.repaint(290,172,548,67);canvas.repaint(48,185,230,87);canvas.repaint(95,292,150,355);canvas.repaint(886,292,69,355);}
+void GuitarEditor::moreOptions(){juce::PopupMenu m;m.addItem(1,"Copy current setup to the other A/B slot");m.addItem(2,"Restore reference settings");m.addSeparator();for(int k=0;k<6;++k)m.addItem(10+k,labels[k+1],true,processor.state.getRawParameterValue(juce::String(ids[k+1])+"On")->load()>.5f);const juce::Component::SafePointer<GuitarEditor> safe(this);m.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(options),[safe](int id){if(safe==nullptr)return;if(id==1)safe->comparison[(size_t)(1-safe->activeSlot)]=safe->processor.state.copyState();if(id==2){const float f[]={0,0,0,0,0,0,0,0};for(int i=0;i<8;++i)safe->setParameter(ids[i],f[i]);const int c[]={2,2,2,2,2,2};for(int i=0;i<6;++i){safe->setParameter(juce::String(ids[i+1])+"Color",(float)c[i]);safe->setParameter(juce::String(ids[i+1])+"On",1);}safe->setParameter("amp",0);safe->setParameter("reamp",0);safe->setParameter("balance",0);}if(id>=10&&id<16){juce::String key=juce::String(ids[id-9])+"On";safe->setParameter(key,safe->processor.state.getRawParameterValue(key)->load()>.5f?0:1);}safe->recordChange();});}
+void GuitarEditor::timerCallback(){for(int c=0;c<2;++c){meterInput[(size_t)c]=juce::jmax(processor.inputChannels[(size_t)c].load(),meterInput[(size_t)c]*.86f);meterOutput[(size_t)c]=juce::jmax(processor.outputChannels[(size_t)c].load(),meterOutput[(size_t)c]*.86f);}meterIn=juce::jmax(processor.inMeter.load(),meterIn*.86f);meterOut=juce::jmax(processor.outMeter.load(),meterOut*.86f);clipIn=processor.inputClipped.load()?1:0;clipOut=processor.outputClipped.load()?1:0;undo.setEnabled(historyIndex>0);redo.setEnabled(historyIndex+1<(int)history.size());compare.setButtonText(activeSlot==0?"A → B":"B → A");canvas.repaint(0,0,1120,29);canvas.repaint(290,172,548,67);canvas.repaint(48,185,230,87);canvas.repaint(95,292,150,355);canvas.repaint(886,292,69,355);}
 
 void GuitarEditor::drawPanel(juce::Graphics& g){
     if(!panelCache.isValid()) {
@@ -307,7 +325,7 @@ void GuitarEditor::drawPanelContent(juce::Graphics& g,bool dynamic){
     for(int y=178;y<235;y+=3){g.setColour(juce::Colours::white.withAlpha(.025f));g.drawHorizontalLine(y,295,833);}
     }
     if(dynamic){
-    for(int k=0;k<6;++k){int active=juce::jlimit(0,2,(int)processor.state.getRawParameterValue(juce::String(ids[k+1])+"Color")->load());bool on=processor.state.getRawParameterValue(juce::String(ids[k+1])+"On")->load()>.5f;for(int row=0;row<3;++row){auto c=active==row&&on?colorFor(row):juce::Colour(0xff444943);if(k==0&&row==1&&active==row&&on)c=colorFor(2);text(g,names[k][row],{float(centers[k+1]-43),178.f+row*18,86,18},12,c,juce::Font::bold|juce::Font::italic);}}
+    for(int k=0;k<6;++k){int active=juce::jlimit(0,2,(int)processor.state.getRawParameterValue(juce::String(ids[k+1])+"Color")->load());bool on=processor.state.getRawParameterValue(juce::String(ids[k+1])+"On")->load()>.5f;for(int row=0;row<3;++row){auto c=active==row&&on?colorFor(row):juce::Colour(0xff444943);text(g,names[k][row],{float(centers[k+1]-43),178.f+row*18,86,18},12,c,juce::Font::bold|juce::Font::italic);}}
     }
     if(!dynamic) text(g,"Re-Amplify",{48,166,160,24},16,ink,juce::Font::plain,juce::Justification::left);
     if(dynamic){
@@ -318,6 +336,7 @@ void GuitarEditor::drawPanelContent(juce::Graphics& g,bool dynamic){
     const char* modes[]={"CLEAN","CRUNCH","HEAVY","BYPASS"};
     for(int j=0;j<4;++j){g.setColour(mode==j?juce::Colour(0xffe7d96a):juce::Colour(0xff777d74));g.fillEllipse(196,193.f+20*j,3,3);text(g,modes[j],{204,185.f+20*j,70,20},12,mode==j?juce::Colour(0xffe7d96a):juce::Colour(0xff858c82),juce::Font::bold|juce::Font::italic,juce::Justification::left);}
     }
+    if(!dynamic&&processor.getTotalNumInputChannels()==2)text(g,"BAL",{124,274,30,18},10,ink);
     if(!dynamic) for(int i=0;i<8;++i){int x=centers[i];for(int j=0;j<3;++j){float y=357.f+j*115;text(g,j==0?"+10":j==1?"0":"−10",{float(i==0?x-63:x+22),y,39,17},12,juce::Colour(0xff969e94));}text(g,labels[i],{float(x-49),660,98,25},14,ink);}
     if(dynamic){
     const float inputDb=juce::Decibels::gainToDecibels(meterIn,-60.f);
@@ -325,8 +344,8 @@ void GuitarEditor::drawPanelContent(juce::Graphics& g,bool dynamic){
     auto meter=[&](int x,const std::array<float,2>& levels,int clip){
         g.setColour(juce::Colour(0xff111412));g.fillRoundedRectangle(float(x+9),292,34,353,10);screw(g,float(x+26),309,8);screw(g,float(x+26),628,8);
         juce::Rectangle<float> r(float(x-4),332,61,272);g.setColour(juce::Colour(0xff060807));g.fillRect(r);g.setColour(juce::Colour(0xff72766c));g.drawRect(r.reduced(1),1);g.setColour(juce::Colour(0xff353e35));g.fillRect(r.reduced(4));
-        for(int j=0;j<36;++j){float y=590.f-j*6.7f;for(int ch=0;ch<2;++ch){float db=juce::Decibels::gainToDecibels(levels[(size_t)ch],-60.f);bool on=db>=-24.f+j*(24.f/35);auto c=j>32?(clip?juce::Colour(0xffe73527):juce::Colour(0xff60302b)):(on?juce::Colour(0xff89e83c):juce::Colour(0xff25502d));g.setColour(c);g.fillRect(float(x+3+ch*33),y,13.f,5.2f);g.setColour(juce::Colours::black.withAlpha(.15f));g.drawVerticalLine(x+9+ch*33,y,y+5);}}
-        for(int j=0;j<5;++j)text(g,juce::String(j*6),{float(x+15),341.f+j*58,23,15},10,juce::Colour(0xffb8bfb3));
+        for(int j=0;j<36;++j){float y=590.f-j*6.7f;for(int ch=0;ch<2;++ch){float db=juce::Decibels::gainToDecibels(levels[(size_t)ch],-60.f);bool on=db>=-26.f+j*(26.f/35);auto c=j>32?(clip?juce::Colour(0xffe73527):juce::Colour(0xff60302b)):(on?juce::Colour(0xff89e83c):juce::Colour(0xff25502d));g.setColour(c);g.fillRect(float(x+3+ch*33),y,13.f,5.2f);g.setColour(juce::Colours::black.withAlpha(.15f));g.drawVerticalLine(x+9+ch*33,y,y+5);}}
+        for(int j=0;j<5;++j)text(g,juce::String(-j*6.5f, j%2?1:0),{float(x+15),341.f+j*58,23,15},10,juce::Colour(0xffb8bfb3));
     };meter(182,meterInput,clipIn);meter(890,meterOutput,clipOut);
     }
     if(!dynamic){
